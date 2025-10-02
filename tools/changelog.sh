@@ -28,7 +28,8 @@ echo "| ----- | ------- | --------- | --------- |"
 artifact Android android
 artifact "Windows (amd64)" windows-amd64
 artifact "Windows (arm64)" windows-arm64
-artifact Linux linux
+artifact "Linux (amd64)" linux-amd64
 artifact "Linux (aarch64)" linux-aarch64
-artifact Solaris solaris
-artifact FreeBSD freebsd
+artifact "Solaris (amd64)" solaris-amd64
+artifact "FreeBSD (amd64)" freebsd-amd64
+artifact "OpenBSD (amd64)" openbsd-amd64
