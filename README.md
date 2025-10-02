@@ -16,7 +16,6 @@ if (ANDROID)
       URL https://github.com/crueter/OpenSSL-CI/releases/download/v3.5.2/openssl-android-3.5.2.tar.zst
     )
     FetchContent_MakeAvailable(OpenSSL)
-    include(${OpenSSL_SOURCE_DIR}/openssl.cmake)
 endif()
 ```
 
@@ -28,7 +27,6 @@ if (MSVC)
     NAME OpenSSL
     URL https://github.com/crueter/OpenSSL-CI/releases/download/v3.5.2/openssl-windows-3.5.2.tar.zst
   )
-  include(${OpenSSL_SOURCE_DIR}/openssl.cmake)
 endif()
 ```
 

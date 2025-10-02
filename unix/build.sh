@@ -1,20 +1,23 @@
-#!/bin/bash
+#!/bin/bash -e
+
+set -e
 
 [ -z "$OUT_DIR" ] && OUT_DIR=$PWD/out
 
-[ -z "$SSL_VERSION" ] && SSL_VERSION=3.5.2
-[ -z "$ARCH" ] && ARCH=amd64
-[ -z "$BUILD_DIR" ] && BUILD_DIR=build
-[ -z "$BUILD_TYPE" ] && BUILD_TYPE=no-asm
-[ -z "$PLATFORM" ] && PLATFORM=linux
+SSL_VERSION=${SSL_VERSION:-3.6.0}
+BUILD_TYPE=${BUILD_TYPE:-no-asm}
+OUT_DIR=${OUT_DIR:-$PWD/out}
+ARCH=${ARCH:-amd64}
+BUILD_DIR=${BUILD_DIR:-build}
+PLATFORM=${PLATFORM:-linux}
 
-[ "$PLATFORM" == "solaris" ] && MAKE=gmake || MAKE=make
-[ "$ARCH" != "amd64" ] && PLATFORM=$PLATFORM-$ARCH
+[ "$PLATFORM" == "solaris" ] || [ "$PLATFORM" == "openbsd" ] && MAKE=gmake && TAR=gtar
+MAKE=${MAKE:-make}
+TAR=${TAR:-tar}
 
 configure_ssl() {
     log_file=$1
 
-    # TODO(crueter): arm
     config_params=( "${BUILD_TYPE}" "shared" "no-makedepend" "--release")
 
     echo "Configuring OpenSSL $SSL_VERSION"
@@ -37,6 +40,7 @@ build_ssl() {
 strip_libs() {
     find . -name "libcrypto*.so" -exec strip {} \;
     find . -name "libssl*.so" -exec strip {} \;
+
 }
 
 copy_build_artifacts() {
@@ -48,17 +52,16 @@ copy_build_artifacts() {
 
 copy_cmake() {
     cp $ROOTDIR/CMakeLists.txt "$OUT_DIR"
-    cp $ROOTDIR/unix/openssl.cmake "$OUT_DIR"
 }
 
 package() {
     echo "Packaging..."
     mkdir -p "$ROOTDIR/artifacts"
 
-    TARBALL=openssl-$PLATFORM-$SSL_VERSION.tar
+    TARBALL=openssl-$PLATFORM-$ARCH-$SSL_VERSION.tar
 
     cd "$OUT_DIR"
-    tar cf $ROOTDIR/artifacts/$TARBALL *
+    $TAR cf $ROOTDIR/artifacts/$TARBALL *
 
     cd "$ROOTDIR/artifacts"
     zstd -10 $TARBALL
@@ -77,7 +80,7 @@ pushd "$BUILD_DIR"
 
 echo "Extracting OpenSSL $SSL_VERSION"
 rm -fr "openssl-$SSL_VERSION"
-tar xf "$ROOTDIR/openssl-$SSL_VERSION.tar.gz"
+$TAR xf "$ROOTDIR/openssl-$SSL_VERSION.tar.gz"
 
 mv "openssl-$SSL_VERSION" "openssl-$SSL_VERSION-$ARCH"
 pushd "openssl-$SSL_VERSION-$ARCH"

@@ -29,7 +29,7 @@ configure_ssl() {
     echo "Configuring OpenSSL $SSL_VERSION"
     echo "Configure parameters: ${config_params[@]}"
 
-    ./Configure "${config_params[@]}" 2>&1 1>${log_file} | tee -a ${log_file} || exit 1
+		./Configure "${config_params[@]}" 2>&1 1>${log_file} | tee -a ${log_file} || exit 1
 
     echo "Making dependencies..."
     nmake depend
@@ -61,7 +61,6 @@ copy_build_artifacts() {
 
 copy_cmake() {
     cp $ROOTDIR/CMakeLists.txt "$OUT_DIR"
-    cp $ROOTDIR/windows/openssl.cmake "$OUT_DIR"
 }
 
 package() {
