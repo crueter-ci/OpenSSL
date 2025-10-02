@@ -110,6 +110,7 @@ jobs:
             arch: aarch64
 
     env:
+      SSL_VERSION: ${{ needs.version.outputs.ssl_version }}
       ARCH: ${{ matrix.arch }}
 
     steps:
@@ -168,7 +169,7 @@ jobs:
           usesh: true
           envs: 'PLATFORM ARCH SSL_VERSION GITHUB_WORKSPACE'
           prepare: |
-            pkg install wget perl gtar
+            pkg install wget perl gnu-tar
 
           run: |
             chmod a+x ./unix/build.sh
@@ -196,7 +197,7 @@ jobs:
           usesh: true
           envs: 'PLATFORM ARCH SSL_VERSION GITHUB_WORKSPACE'
           prepare: |
-            pkg_add bash wget make
+            pkg_add bash wget make gtar-1.35p1
 
           run: |
             chmod a+x ./unix/build.sh

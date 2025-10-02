@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/bin/bash -e
+
+set -e
 
 [ -z "$OUT_DIR" ] && OUT_DIR=$PWD/out
 
@@ -9,10 +11,8 @@ ARCH=${ARCH:-amd64}
 BUILD_DIR=${BUILD_DIR:-build}
 PLATFORM=${PLATFORM:-linux}
 
-[ "$PLATFORM" == "solaris" ] || [ "$PLATFORM" == "openbsd" ] && MAKE=gmake
+[ "$PLATFORM" == "solaris" ] || [ "$PLATFORM" == "openbsd" ] && MAKE=gmake && TAR=gtar
 MAKE=${MAKE:-make}
-
-[ "$PLATFORM" == "solaris" ] && TAR=gtar
 TAR=${TAR:-tar}
 
 configure_ssl() {
@@ -39,7 +39,9 @@ build_ssl() {
 
 strip_libs() {
     find . -name "libcrypto*.so" -exec strip {} \;
-    find . -name "libssl*.so" -exec strip {} \;
+    find . -name "libssl*.so" -exec strip {} \;    env:
+      ARCH: ${{ matrix.arch }}
+
 }
 
 copy_build_artifacts() {
