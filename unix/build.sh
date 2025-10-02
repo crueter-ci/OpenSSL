@@ -39,8 +39,7 @@ build_ssl() {
 
 strip_libs() {
     find . -name "libcrypto*.so" -exec strip {} \;
-    find . -name "libssl*.so" -exec strip {} \;    env:
-      ARCH: ${{ matrix.arch }}
+    find . -name "libssl*.so" -exec strip {} \;
 
 }
 

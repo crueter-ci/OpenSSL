@@ -169,7 +169,7 @@ jobs:
           usesh: true
           envs: 'PLATFORM ARCH SSL_VERSION GITHUB_WORKSPACE'
           prepare: |
-            pkg install wget perl gnu-tar
+            pkg install wget perl gnu-tar gnu-make
 
           run: |
             chmod a+x ./unix/build.sh
@@ -197,7 +197,7 @@ jobs:
           usesh: true
           envs: 'PLATFORM ARCH SSL_VERSION GITHUB_WORKSPACE'
           prepare: |
-            pkg_add bash wget make gtar-1.35p1
+            pkg_add bash wget make gtar-1.35p0 gmake
 
           run: |
             chmod a+x ./unix/build.sh
