@@ -92,15 +92,15 @@ configure_ssl ${log_file}
 
 # Delete existing build artifacts
 rm -fr "$OUT_DIR"
-mkdir -p "$OUT_DIR" || exit 1
+mkdir -p "$OUT_DIR"
 
 build_ssl ${log_file}
 strip_libs
 copy_build_artifacts
 
-# Copy the include dir only once since since it's the same for all abis
 if [ ! -d "$OUT_DIR/include" ]; then
-    cp -a include "$OUT_DIR/" || exit 1
+    cp -a include "$OUT_DIR/"
+	cp "$ROOTDIR"/cert.h "$OUT_DIR"/include
 
     # Clean include folder
     find "$OUT_DIR/" -name "*.in" -delete

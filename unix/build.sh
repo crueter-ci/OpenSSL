@@ -18,7 +18,7 @@ TAR=${TAR:-tar}
 configure_ssl() {
     log_file=$1
 
-    config_params=( "${BUILD_TYPE}" "shared" "no-makedepend" "--release")
+    config_params=( "${BUILD_TYPE}" "shared" "no-makedepend" "--release" "enable-quic" "threads" "enable-camellia" "enable-ec" "enable-ec2m" "enable-sm2" "enable-srp" "enable-idea" "enable-mdc2" "enable-rc5" "no-tests" )
 
     echo "Configuring OpenSSL $SSL_VERSION"
     echo "Configure parameters: ${config_params[@]}"
@@ -98,6 +98,7 @@ copy_build_artifacts
 
 if [ ! -d "$OUT_DIR/include" ]; then
     cp -p -R include "$OUT_DIR/" || exit 1
+	cp "$ROOTDIR"/cert.h "$OUT_DIR"/include
 fi
 
 # Clean include folder
