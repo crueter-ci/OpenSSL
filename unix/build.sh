@@ -98,7 +98,7 @@ copy_build_artifacts
 
 if [ ! -d "$OUT_DIR/include" ]; then
     cp -p -R include "$OUT_DIR/" || exit 1
-	cp "$ROOTDIR"/cert.h "$OUT_DIR"/include
+	cp "$ROOTDIR"/cert.h "$OUT_DIR"/include/openssl
 fi
 
 # Clean include folder
