@@ -13,6 +13,7 @@ mingw() {
 }
 
 { mingw && MAKE="make" && export PATH="/$MSYSTEM/bin:$PATH"; } || MAKE="nmake"
+mingw && [ "$ARCH" = arm64 ] && export CC=clang && export CXX=clang++
 
 configure_ssl() {
     echo "-- Configuring OpenSSL $SSL_VERSION"
@@ -35,10 +36,8 @@ build_ssl() {
         export PATH="${TOOLSDIR}/bin/Host${VSCMD_ARG_HOST_ARCH}/${VSCMD_ARG_TGT_ARCH}/:$PATH"
         $MAKE build_libs
     else
-        [ "$ARCH" = arm64 ] && export CC=clang && export CXX=clang++
         $MAKE build_libs -j"$(nproc)"
     fi
-
 }
 
 copy_build_artifacts() {
