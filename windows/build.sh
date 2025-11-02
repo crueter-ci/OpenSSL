@@ -13,7 +13,7 @@ mingw() {
 }
 
 { mingw && MAKE="make" && export PATH="/$MSYSTEM/bin:$PATH"; } || MAKE="nmake"
-mingw && [ "$ARCH" = arm64 ] && export CC=clang && export CXX=clang++
+mingw && [ "$ARCH" = arm64 ] && export CC=aarch64-w64-mingw32-clang && export CXX=aarch64-w64-mingw32-clang++
 
 configure_ssl() {
     echo "-- Configuring OpenSSL $SSL_VERSION"
