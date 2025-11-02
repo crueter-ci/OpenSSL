@@ -12,7 +12,7 @@ mingw() {
     [ "$PLATFORM" = "mingw" ]
 }
 
-{ mingw && MAKE="make"; } || MAKE="nmake"
+{ mingw && MAKE="make" && export PATH="/$MSYSTEM/bin:$PATH"; } || MAKE="nmake"
 
 configure_ssl() {
     echo "-- Configuring OpenSSL $SSL_VERSION"
