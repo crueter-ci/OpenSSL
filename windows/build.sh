@@ -47,6 +47,11 @@ copy_build_artifacts() {
     mv libssl-*.dll libssl.dll
     mv libcrypto-*.dll libcrypto.dll
 
+    if mingw; then
+        mv libssl*.a libssl.lib
+        mv libcrypto*.a libcrypto.lib
+    fi
+
     for lib in ssl crypto; do
         cp lib${lib}*.dll "$OUT_DIR"/lib
         cp lib${lib}*.lib "$OUT_DIR"/lib
