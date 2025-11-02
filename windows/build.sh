@@ -13,12 +13,17 @@ mingw() {
 }
 
 { mingw && MAKE="make" && export PATH="/$MSYSTEM/bin:$PATH"; } || MAKE="nmake"
-mingw && [ "$ARCH" = arm64 ] && export CC=clang && export CXX=clang++ && export RC="/$MSYSTEM/bin/llvm-windres.exe"
+mingw && [ "$ARCH" = arm64 ] && export CC=clang && export CXX=clang++ && export RC=llvm-windres
 
 configure_ssl() {
     echo "-- Configuring OpenSSL $SSL_VERSION"
 
-    ./Configure "${BUILD_TYPE}" shared no-makedepend --release
+    # PLOO
+    if mingw && [ "$ARCH" = arm64 ]; then
+        ./Configure mingwarm64 "${BUILD_TYPE}" shared no-makedepend --release
+    else
+        ./Configure "${BUILD_TYPE}" shared no-makedepend --release
+    fi
 
     echo "-- Making dependencies..."
     $MAKE depend
