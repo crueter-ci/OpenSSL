@@ -3,24 +3,27 @@
 # Generates a "changelog"/download utility table
 # Requires: echo
 
-BASE_DOWNLOAD_URL="https://github.com/crueter/OpenSSL-CI/releases/download"
-TAG=v$SSL_VERSION
+# Change to the current repo
+BASE_DOWNLOAD_URL="https://github.com/crueter-ci/OpenSSL/releases/download"
+TAG=v$VERSION
 
 artifact() {
-  NAME="$1"
-  ARTIFACT="$2"
+    NAME="$1"
+    PLATFORM="$2"
 
-  BASE_URL="${BASE_DOWNLOAD_URL}/${TAG}/openssl-${ARTIFACT}-${SSL_VERSION}.tar.zst"
+    BASE_URL="${BASE_DOWNLOAD_URL}/${TAG}/openssl-${PLATFORM}-${VERSION}.tar.zst"
 
-  echo -n "| "
-  echo -n "[$NAME]($BASE_URL) | "
-  for sum in 1 256 512; do
-    echo -n "[Download]($BASE_URL.sha${sum}sum) |"
-  done
-  echo
+    COL1="[$NAME]($BASE_URL)"
+
+    printf '| %s |' "$COL1"
+    for sum in 1 256 512; do
+        DOWNLOAD="[Download]($BASE_URL.sha${sum}sum)"
+        printf " %s |" "$DOWNLOAD" 
+    done
+    echo
 }
 
-echo "Builds for OpenSSL $SSL_VERSION"
+echo "Builds for $PRETTY_NAME $VERSION"
 echo
 echo "| Build | sha1sum | sha256sum | sha512sum |"
 echo "| ----- | ------- | --------- | --------- |"
@@ -28,6 +31,8 @@ echo "| ----- | ------- | --------- | --------- |"
 artifact Android android
 artifact "Windows (amd64)" windows-amd64
 artifact "Windows (arm64)" windows-arm64
+artifact "MinGW (amd64)" mingw-amd64
+artifact "MinGW (arm64)" mingw-arm64
 artifact "Linux (amd64)" linux-amd64
 artifact "Linux (aarch64)" linux-aarch64
 artifact "Solaris (amd64)" solaris-amd64
