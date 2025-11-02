@@ -72,6 +72,53 @@ jobs:
           name: windows-${{ matrix.arch }}
           path: artifacts/*
 
+  msys:
+    name: "MinGW ${{ matrix.arch }}"
+    needs: [version]
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs-on: windows-latest
+            arch: amd64
+            msystem: mingw64
+
+          - runs-on: windows-11-arm
+            arch: arm64
+            msystem: clangarm64
+
+    env:
+      ARCH: ${{ matrix.arch }}
+      SSL_VERSION: ${{ needs.version.outputs.ssl_version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+
+      - name: Setup MSYS2
+        id: msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            git make unzip
+          pacboy: >-
+            toolchain:p
+
+      - name: Build
+        shell: msys2 {0}
+        run: |
+          chmod a+x ./windows/build.sh
+          PLATFORM=mingw ./windows/build.sh
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingw-${{ matrix.arch }}
+          path: artifacts/*
+
   android:
     needs: [version]
     runs-on: ubuntu-latest
@@ -197,7 +244,7 @@ jobs:
           usesh: true
           envs: 'PLATFORM ARCH SSL_VERSION GITHUB_WORKSPACE'
           prepare: |
-            pkg_add bash wget make gtar-1.35p0 gmake coreutils
+            pkg_add bash wget make gtar-1.35p1 gmake coreutils
 
           run: |
             chmod a+x ./unix/build.sh
