@@ -38,6 +38,26 @@ if (UNIX)
     set_target_properties(OpenSSL::SSL PROPERTIES
         IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libssl.${LIB_SUFFIX}
     )
+elseif(MINGW)
+    if (BUILD_SHARED_LIBS)
+        set_target_properties(OpenSSL::Crypto PROPERTIES
+            IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libcrypto.dll
+            IMPORTED_IMPLIB ${OPENSSL_LIB_DIR}/libcrypto.dll.a
+        )
+
+        set_target_properties(OpenSSL::SSL PROPERTIES
+            IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libssl.dll
+            IMPORTED_IMPLIB ${OPENSSL_LIB_DIR}/libssl.dll.a
+        )
+    else()
+        set_target_properties(OpenSSL::Crypto PROPERTIES
+            IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libcrypto.a
+        )
+
+        set_target_properties(OpenSSL::SSL PROPERTIES
+            IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libssl.a
+        )
+    endif()
 else()
     if (BUILD_SHARED_LIBS)
         set_target_properties(OpenSSL::Crypto PROPERTIES
