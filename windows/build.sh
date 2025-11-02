@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 
 # I just discovered this syntax and it's awesome
 : "${OUT_DIR:=$PWD/out}"
@@ -13,7 +13,7 @@ mingw() {
 }
 
 { mingw && MAKE="make" && export PATH="/$MSYSTEM/bin:$PATH"; } || MAKE="nmake"
-mingw && [ "$ARCH" = arm64 ] && export CC=aarch64-w64-mingw32-clang && export CXX=aarch64-w64-mingw32-clang++
+mingw && [ "$ARCH" = arm64 ] && export CC=clang && export CXX=clang++
 
 configure_ssl() {
     echo "-- Configuring OpenSSL $SSL_VERSION"
