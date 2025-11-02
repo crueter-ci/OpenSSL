@@ -244,7 +244,7 @@ jobs:
           usesh: true
           envs: 'PLATFORM ARCH SSL_VERSION GITHUB_WORKSPACE'
           prepare: |
-            pkg_add bash wget make gtar-1.35p0 gmake coreutils
+            pkg_add bash wget make gtar-1.35p1 gmake coreutils
 
           run: |
             chmod a+x ./unix/build.sh
