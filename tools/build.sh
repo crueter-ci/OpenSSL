@@ -92,13 +92,13 @@ copy_build_artifacts() {
 }
 
 ## Cleanup ##
-# rm -rf "$BUILD_DIR" "$OUT_DIR"
-# mkdir -p "$BUILD_DIR" "$OUT_DIR"
+rm -rf "$BUILD_DIR" "$OUT_DIR"
+mkdir -p "$BUILD_DIR" "$OUT_DIR"
 
 ## Download + Extract ##
-# download
+download
 cd "$BUILD_DIR"
-# extract
+extract
 
 ## Configure ##
 cd "$DIRECTORY"
