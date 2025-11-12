@@ -30,15 +30,14 @@ fi
 
 configure() {
 	target="$1"
-	prefix="${2:-$OUT_DIR}"
 
 	echo "-- Configuring $PRETTY_NAME..."
 
     # shellcheck disable=SC2086
     if android; then
-	    ./Configure --prefix="$prefix" "${BUILD_TYPE}" shared android-"${ARCH}" -U__ANDROID_API__ -D__ANDROID_API__="${ANDROID_API}"
+	    ./Configure "${BUILD_TYPE}" shared android-"${ARCH}" -U__ANDROID_API__ -D__ANDROID_API__="${ANDROID_API}"
 	else
-		./Configure --prefix="$prefix" "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests
+		./Configure "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests
 	fi
 
     echo "-- Making dependencies..."
@@ -77,20 +76,22 @@ strip_libs() {
 
 ## Packaging ##
 copy_build_artifacts() {
+	outdir="$1"
+
     echo "-- Copying artifacts..."
-	mkdir -p "$OUT_DIR"/lib
+	mkdir -p "$outdir"/lib
 
 	# make sometimes does not respect SHLIB_VERSION_NUMBER because fuck you
 	mv libssl-*."${SHARED_SUFFIX}" libssl."${SHARED_SUFFIX}"       || true
 	mv libcrypto-*."${SHARED_SUFFIX}" libcrypto."${SHARED_SUFFIX}" || true
 
 	for lib in ssl crypto; do
-        cp lib${lib}*."${SHARED_SUFFIX}" "$OUT_DIR"/lib
-        cp lib${lib}*."${STATIC_SUFFIX}" "$OUT_DIR"/lib
+        cp lib${lib}*."${SHARED_SUFFIX}" "$outdir"/lib
+        cp lib${lib}*."${STATIC_SUFFIX}" "$outdir"/lib
     done
 
-    cp -r include "$OUT_DIR/"
-	cp "$ROOTDIR"/cert.h "$OUT_DIR"/include/openssl
+    cp -r include "$outdir/"
+	cp "$ROOTDIR"/cert.h "$outdir"/include/openssl
 }
 
 ## Cleanup ##
@@ -110,7 +111,7 @@ configure "$CONFIGURE_TARGET"
 build
 
 ## Package ##
-copy_build_artifacts
+copy_build_artifacts "$OUT_DIR"
 
 # macOS extra fun: make x86_64 lib too
 if [ "$PLATFORM" = macos ]; then
@@ -119,10 +120,10 @@ if [ "$PLATFORM" = macos ]; then
 	find . -name "*.o" -exec rm {} \;
 
 	TMPDIR="$ROOTDIR"/tmp
-	configure darwin64-x86_64-cc "$TMPDIR"
+	configure darwin64-x86_64-cc 
 	build
 
-	copy_build_artifacts
+	copy_build_artifacts "$TMPDIR"
 
 	# the fun part
 	mkdir -p templibs
