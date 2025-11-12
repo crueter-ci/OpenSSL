@@ -37,6 +37,7 @@ artifact "MinGW (amd64)" mingw-amd64
 artifact "MinGW (arm64)" mingw-arm64
 artifact "Linux (amd64)" linux-amd64
 artifact "Linux (aarch64)" linux-aarch64
+artifact "macOS (universal)" macos-universal
 artifact "Solaris (amd64)" solaris-amd64
 artifact "FreeBSD (amd64)" freebsd-amd64
 artifact "OpenBSD (amd64)" openbsd-amd64
