@@ -84,3 +84,6 @@ if (WIN32)
     # extras needed, notably for static linking
     target_link_libraries(ssl INTERFACE wsock32 ws2_32 crypt32 mswsock wlanapi)
 endif()
+
+add_library(OpenSSL::SSL ALIAS ssl)
+add_library(OpenSSL::Crypto ALIAS crypto)
