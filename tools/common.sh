@@ -51,7 +51,7 @@ extract() {
 
 	case "$ARTIFACT" in
 		*.zip) unzip "$ROOTDIR/$ARTIFACT" >/dev/null ;;
-		*.tar.*) tar xf "$ROOTDIR/$ARTIFACT" >/dev/null ;;
+		*.tar.*) $TAR xf "$ROOTDIR/$ARTIFACT" >/dev/null ;;
 		*.7z) 7z x "$ROOTDIR/$ARTIFACT" >/dev/null ;;
 	esac
 }

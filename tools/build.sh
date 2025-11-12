@@ -47,9 +47,14 @@ configure() {
 
 build() {
     echo "-- Building $PRETTY_NAME..."
-    export CL=" /MP"
 
-    $MAKE SHLIB_VERSION_NUMBER= build_libs -j"$(num_procs)"
+	# ksdjbdfkjsjsdbfjhb
+	if [ "$PLATFORM" = windows ]; then
+	    export CL=" /MP"
+		$MAKE SHLIB_VERSION_NUMBER= build_libs
+	else
+    	$MAKE SHLIB_VERSION_NUMBER= build_libs -j"$(num_procs)"
+	fi
 }
 
 strip_libs() {
@@ -99,6 +104,9 @@ copy_build_artifacts
 
 # macOS extra fun: make x86_64 lib too
 if [ "$PLATFORM" = macos ]; then
+	set -x
+	rm libcrypto.* libssl.*
+
 	TMPDIR="$ROOTDIR"/tmp
 	configure darwin64-x86_64-cc "$TMPDIR"
 	build
@@ -116,6 +124,7 @@ if [ "$PLATFORM" = macos ]; then
 			mv $libname "$OUT_DIR"/lib/$libname
 		done
 	done
+	set +x
 fi
 
 copy_cmake

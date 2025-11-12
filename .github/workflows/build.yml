@@ -107,11 +107,14 @@ jobs:
     strategy:
       fail-fast: false
 
+    env:
+      PLATFORM: android
+      ARCH: arm64
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Build
-        shell: bash
         run: ./tools/build.sh
 
       - name: Upload Artifacts
@@ -221,8 +224,8 @@ jobs:
             pkg_add bash curl make gtar-1.35p1 gmake coreutils
 
           run: |
-            chmod a+x ./unix/build.sh
-            bash unix/build.sh
+            chmod a+x ./tools/build.sh
+            bash tools/build.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
