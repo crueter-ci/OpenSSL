@@ -51,7 +51,15 @@ build() {
 	# ksdjbdfkjsjsdbfjhb
 	if [ "$PLATFORM" = windows ]; then
 	    export CL=" /MP"
-		$MAKE SHLIB_VERSION_NUMBER= build_libs
+
+		# microsoft
+		# shellcheck disable=SC2154
+        TOOLSDIR=$(cygpath -u "$VCToolsInstallDir")
+        export PATH="${TOOLSDIR}/bin/Host${VSCMD_ARG_HOST_ARCH}/${VSCMD_ARG_TGT_ARCH}/:$PATH"
+
+		$MAKE build_libs
+	elif [ "$PLATFORM" = macos ]; then
+    	$MAKE SHLIB_VERSION_NUMBER=3 build_libs -j"$(num_procs)"
 	else
     	$MAKE SHLIB_VERSION_NUMBER= build_libs -j"$(num_procs)"
 	fi
@@ -84,13 +92,13 @@ copy_build_artifacts() {
 }
 
 ## Cleanup ##
-rm -rf "$BUILD_DIR" "$OUT_DIR"
-mkdir -p "$BUILD_DIR" "$OUT_DIR"
+# rm -rf "$BUILD_DIR" "$OUT_DIR"
+# mkdir -p "$BUILD_DIR" "$OUT_DIR"
 
 ## Download + Extract ##
-download
+# download
 cd "$BUILD_DIR"
-extract
+# extract
 
 ## Configure ##
 cd "$DIRECTORY"
@@ -104,8 +112,9 @@ copy_build_artifacts
 
 # macOS extra fun: make x86_64 lib too
 if [ "$PLATFORM" = macos ]; then
-	set -x
+	# cleanup old libs/object files
 	rm libcrypto.* libssl.*
+	find . -name "*.o" -exec rm {} \;
 
 	TMPDIR="$ROOTDIR"/tmp
 	configure darwin64-x86_64-cc "$TMPDIR"
@@ -121,10 +130,10 @@ if [ "$PLATFORM" = macos ]; then
 			lipo "$TMPDIR"/lib/$libname "$OUT_DIR"/lib/$libname \
 				-create -output templibs/$libname
 
-			mv $libname "$OUT_DIR"/lib/$libname
+			mv templibs/$libname "$OUT_DIR"/lib/$libname
 		done
 	done
-	set +x
+	rm -rf tmp
 fi
 
 copy_cmake
