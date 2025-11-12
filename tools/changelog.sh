@@ -1,24 +1,26 @@
-#!/bin/sh
+#!/bin/sh -e
 
-# Generates a "changelog"/download utility table
-# Requires: echo
+## Generates a "changelog"/download utility table ##
+
+# shellcheck disable=SC1091
+. tools/vars.sh
 
 # Change to the current repo
-BASE_DOWNLOAD_URL="https://github.com/crueter-ci/OpenSSL/releases/download"
+BASE_DOWNLOAD_URL="https://github.com/crueter-ci/$PRETTY_NAME/releases/download"
 TAG=v$VERSION
 
 artifact() {
     NAME="$1"
     PLATFORM="$2"
 
-    BASE_URL="${BASE_DOWNLOAD_URL}/${TAG}/openssl-${PLATFORM}-${VERSION}.tar.zst"
+    BASE_URL="${BASE_DOWNLOAD_URL}/${TAG}/${FILENAME}-${PLATFORM}-${VERSION}.tar.zst"
 
     COL1="[$NAME]($BASE_URL)"
 
-    printf '| %s |' "$COL1"
+    printf "| %s |" "$COL1"
     for sum in 1 256 512; do
         DOWNLOAD="[Download]($BASE_URL.sha${sum}sum)"
-        printf " %s |" "$DOWNLOAD" 
+        printf " %s |" "$DOWNLOAD"
     done
     echo
 }

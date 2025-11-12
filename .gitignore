@@ -1,5 +1,6 @@
 build
 out
 artifacts
-openssl*.tar.gz
+*.tar.gz
 changelog.md
+cert-cmake
