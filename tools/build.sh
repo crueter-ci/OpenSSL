@@ -83,12 +83,13 @@ copy_build_artifacts() {
 	mv libssl-*."${SHARED_SUFFIX}" libssl."${SHARED_SUFFIX}"       || true
 	mv libcrypto-*."${SHARED_SUFFIX}" libcrypto."${SHARED_SUFFIX}" || true
 
-	$MAKE install_dev
+	for lib in ssl crypto; do
+        cp lib${lib}*."${SHARED_SUFFIX}" "$OUT_DIR"/lib
+        cp lib${lib}*."${STATIC_SUFFIX}" "$OUT_DIR"/lib
+    done
 
+    cp -r include "$OUT_DIR/"
 	cp "$ROOTDIR"/cert.h "$OUT_DIR"/include/openssl
-
-    echo "-- Cleaning..."
-	rm -rf "$OUT_DIR"/lib/cmake "$OUT_DIR"/lib/pkgconfig
 }
 
 ## Cleanup ##
