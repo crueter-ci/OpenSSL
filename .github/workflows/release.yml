@@ -22,16 +22,10 @@ jobs:
       - name: Download
         uses: actions/download-artifact@v4
 
-      - name: Get SSL Version
-        run: echo "SSL_VERSION=$(./tools/openssl-version.sh)" >> $GITHUB_ENV
-
-      - name: Delete Previous Release
+      - name: Get Version
         run: |
-          gh release delete "v${{ env.SSL_VERSION }}" --repo "${{ github.repository }}" --cleanup-tag -y
-          sleep 5
-        env:
-          GH_TOKEN: "${{ github.token }}"
-        continue-on-error: true
+          . ./tools/vars.sh
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Generate Changelog
         run: |
@@ -41,8 +35,8 @@ jobs:
         uses: softprops/action-gh-release@v2.3.2
         with:
           body_path: ./changelog.md
-          name: OpenSSL ${{ env.SSL_VERSION }}
-          tag_name: v${{ env.SSL_VERSION }}
+          name: OpenSSL ${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}
           files: |
             windows-*/*.tar.zst*
             mingw-*/*.tar.zst*
