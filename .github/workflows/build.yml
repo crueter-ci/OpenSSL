@@ -4,19 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  version:
-    runs-on: ubuntu-latest
-    outputs:
-      ssl_version: ${{ steps.get-version.outputs.SSL_VERSION }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Grab SSL Version
-        id: get-version
-        run: echo "SSL_VERSION=$(./tools/openssl-version.sh)" >> $GITHUB_OUTPUT
-
   windows:
-    needs: [version]
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -31,7 +19,6 @@ jobs:
             msvc_arch: amd64_arm64
 
     env:
-      SSL_VERSION: ${{ needs.version.outputs.ssl_version }}
       ARCH: ${{ matrix.arch }}
 
     steps:
@@ -63,8 +50,7 @@ jobs:
         shell: bash
         run: |
           export PATH="$PERL_BIN:$PATH"
-          chmod a+x ./windows/build.sh
-          ./windows/build.sh
+          PLATFORM=windows ./tools/build.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -74,7 +60,6 @@ jobs:
 
   msys:
     name: "MinGW ${{ matrix.arch }}"
-    needs: [version]
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -89,8 +74,8 @@ jobs:
             msystem: clangarm64
 
     env:
+      PLATFORM: mingw
       ARCH: ${{ matrix.arch }}
-      SSL_VERSION: ${{ needs.version.outputs.ssl_version }}
 
     steps:
       - name: Checkout
@@ -103,15 +88,13 @@ jobs:
           msystem: ${{ matrix.msystem }}
           update: true
           install: >-
-            git make unzip
+            git make tar curl
           pacboy: >-
             toolchain:p
 
       - name: Build
         shell: msys2 {0}
-        run: |
-          chmod a+x ./windows/build.sh
-          PLATFORM=mingw ./windows/build.sh
+        run: ./tools/build.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -120,21 +103,19 @@ jobs:
           path: artifacts/*
 
   android:
-    needs: [version]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+
     env:
-      SSL_VERSION: ${{ needs.version.outputs.ssl_version }}
+      PLATFORM: android
+      ARCH: arm64
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Build
-        shell: bash
-        run: |
-          chmod a+x ./android/build.sh
-          ./android/build.sh
+        run: ./tools/build.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -143,7 +124,6 @@ jobs:
           path: artifacts/*
 
   linux:
-    needs: [version]
     name: "Linux ${{ matrix.arch }}"
     runs-on: ${{ matrix.runs-on }}
     strategy:
@@ -157,15 +137,14 @@ jobs:
             arch: aarch64
 
     env:
-      SSL_VERSION: ${{ needs.version.outputs.ssl_version }}
+      PLATFORM: linux
       ARCH: ${{ matrix.arch }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build (Linux)
-        run: |
-          ./unix/build.sh
+      - name: Build
+        run: ./tools/build.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -174,7 +153,6 @@ jobs:
           path: artifacts/*
 
   unix:
-    needs: [version]
     name: "${{ matrix.platform }} ${{ matrix.arch }}"
     runs-on: ${{ matrix.runs-on }}
     strategy:
@@ -198,7 +176,6 @@ jobs:
 
     env:
       PLATFORM: ${{ matrix.platform }}
-      SSL_VERSION: ${{ needs.version.outputs.ssl_version }}
       ARCH: ${{ matrix.arch }}
 
     steps:
@@ -214,13 +191,13 @@ jobs:
           arch: ${{ matrix.vm-arch }}
           release: "r151054"
           usesh: true
-          envs: 'PLATFORM ARCH SSL_VERSION GITHUB_WORKSPACE'
+          envs: 'PLATFORM ARCH GITHUB_WORKSPACE'
           prepare: |
-            pkg install wget perl gnu-tar gnu-make gcc14
+            pkg install curl perl gnu-tar gnu-make gcc14
 
           run: |
-            chmod a+x ./unix/build.sh
-            ./unix/build.sh
+            chmod a+x ./tools/build.sh
+            ./tools/build.sh
 
       - name: Build (FreeBSD)
         if: matrix.platform == 'freebsd'
@@ -228,13 +205,13 @@ jobs:
         with:
           arch: ${{ matrix.vm-arch }}
           usesh: true
-          envs: 'PLATFORM ARCH SSL_VERSION GITHUB_WORKSPACE'
+          envs: 'PLATFORM ARCH GITHUB_WORKSPACE'
           prepare: |
-            pkg install -y wget perl5 bash
+            pkg install -y curl perl5 bash gtar gmake
 
           run: |
-            chmod a+x ./unix/build.sh
-            bash unix/build.sh
+            chmod a+x ./tools/build.sh
+            bash tools/build.sh
 
       - name: Build (OpenBSD)
         if: matrix.platform == 'openbsd'
@@ -242,16 +219,40 @@ jobs:
         with:
           arch: ${{ matrix.vm-arch }}
           usesh: true
-          envs: 'PLATFORM ARCH SSL_VERSION GITHUB_WORKSPACE'
+          envs: 'PLATFORM ARCH GITHUB_WORKSPACE'
           prepare: |
-            pkg_add bash wget make gtar-1.35p1 gmake coreutils
+            pkg_add bash curl make gtar-1.35p1 gmake coreutils
 
           run: |
-            chmod a+x ./unix/build.sh
-            bash unix/build.sh
+            chmod a+x ./tools/build.sh
+            bash tools/build.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
+          path: artifacts/*
+
+  macos:
+    name: "macOS"
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+
+    env:
+      PLATFORM: macos
+      ARCH: universal
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build
+        run: ./tools/build.sh
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal
           path: artifacts/*

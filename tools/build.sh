@@ -1,0 +1,144 @@
+#!/bin/sh
+
+set -e
+
+# shellcheck disable=SC1091
+
+. tools/common.sh
+
+## Platform Stuff ##
+
+android() {
+	[ "$PLATFORM" = android ]
+}
+
+DEFAULT_ARCH=amd64
+if android; then
+	DEFAULT_ARCH=arm64
+	: "${ANDROID_NDK_ROOT:?-- You must supply the ANDROID_NDK_ROOT environment variable.}"
+	: "${ANDROID_API:=23}"
+	android_paths
+fi
+
+## Buildtime/Input Variables ##
+
+: "${ARCH:=$DEFAULT_ARCH}"
+: "${BUILD_DIR:=build}"
+: "${BUILD_TYPE:=no-asm}"
+
+## Build Functions ##
+
+configure() {
+	target="$1"
+	prefix="${2:-$OUT_DIR}"
+
+	echo "-- Configuring $PRETTY_NAME..."
+
+    # shellcheck disable=SC2086
+    if android; then
+	    ./Configure --prefix="$prefix" "${BUILD_TYPE}" shared android-"${ARCH}" -U__ANDROID_API__ -D__ANDROID_API__="${ANDROID_API}"
+	else
+		./Configure --prefix="$prefix" "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests
+	fi
+
+    echo "-- Making dependencies..."
+    $MAKE depend
+}
+
+build() {
+    echo "-- Building $PRETTY_NAME..."
+
+	# ksdjbdfkjsjsdbfjhb
+	if [ "$PLATFORM" = windows ]; then
+	    export CL=" /MP"
+
+		# microsoft
+		# shellcheck disable=SC2154
+        TOOLSDIR=$(cygpath -u "$VCToolsInstallDir")
+        export PATH="${TOOLSDIR}/bin/Host${VSCMD_ARG_HOST_ARCH}/${VSCMD_ARG_TGT_ARCH}/:$PATH"
+
+		$MAKE build_libs
+	elif [ "$PLATFORM" = macos ]; then
+    	$MAKE SHLIB_VERSION_NUMBER=3 build_libs -j"$(num_procs)"
+	else
+    	$MAKE SHLIB_VERSION_NUMBER= build_libs -j"$(num_procs)"
+	fi
+}
+
+strip_libs() {
+	echo "-- Stripping shared libraries..."
+
+	case "$PLATFORM" in
+		windows) ;;
+		android) find "$OUT_DIR" -name "*.so" -exec llvm-strip --strip-all {} \; ;;
+		*) find "$OUT_DIR" -name "*.$SHARED_SUFFIX" -exec strip {} \; ;;
+	esac
+}
+
+## Packaging ##
+copy_build_artifacts() {
+    echo "-- Copying artifacts..."
+
+	# make sometimes does not respect SHLIB_VERSION_NUMBER because fuck you
+	mv libssl-*."${SHARED_SUFFIX}" libssl."${SHARED_SUFFIX}"       || true
+	mv libcrypto-*."${SHARED_SUFFIX}" libcrypto."${SHARED_SUFFIX}" || true
+
+	$MAKE install_dev
+
+	cp "$ROOTDIR"/cert.h "$OUT_DIR"/include/openssl
+
+    echo "-- Cleaning..."
+	rm -rf "$OUT_DIR"/lib/cmake "$OUT_DIR"/lib/pkgconfig
+}
+
+## Cleanup ##
+rm -rf "$BUILD_DIR" "$OUT_DIR"
+mkdir -p "$BUILD_DIR" "$OUT_DIR"
+
+## Download + Extract ##
+download
+cd "$BUILD_DIR"
+extract
+
+## Configure ##
+cd "$DIRECTORY"
+configure "$CONFIGURE_TARGET"
+
+## Build ##
+build
+
+## Package ##
+copy_build_artifacts
+
+# macOS extra fun: make x86_64 lib too
+if [ "$PLATFORM" = macos ]; then
+	# cleanup old libs/object files
+	rm libcrypto.* libssl.*
+	find . -name "*.o" -exec rm {} \;
+
+	TMPDIR="$ROOTDIR"/tmp
+	configure darwin64-x86_64-cc "$TMPDIR"
+	build
+
+	copy_build_artifacts
+
+	# the fun part
+	mkdir -p templibs
+	for suffix in a dylib; do
+		for lib in crypto ssl; do
+			libname=lib${lib}.${suffix}
+			lipo "$TMPDIR"/lib/$libname "$OUT_DIR"/lib/$libname \
+				-create -output templibs/$libname
+
+			mv templibs/$libname "$OUT_DIR"/lib/$libname
+		done
+	done
+	rm -rf tmp
+fi
+
+copy_cmake
+
+strip_libs
+package
+
+echo "-- Done! Artifacts are in $ROOTDIR/artifacts, raw lib/include data is in $OUT_DIR"
