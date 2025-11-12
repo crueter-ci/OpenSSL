@@ -78,6 +78,7 @@ strip_libs() {
 ## Packaging ##
 copy_build_artifacts() {
     echo "-- Copying artifacts..."
+	mkdir -p "$OUT_DIR"/lib
 
 	# make sometimes does not respect SHLIB_VERSION_NUMBER because fuck you
 	mv libssl-*."${SHARED_SUFFIX}" libssl."${SHARED_SUFFIX}"       || true
