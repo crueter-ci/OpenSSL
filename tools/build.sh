@@ -35,7 +35,13 @@ configure() {
 
     # shellcheck disable=SC2086
     if android; then
-	    ./Configure android64-"${ARCH}" "${BUILD_TYPE}" shared -U__ANDROID_API__ -D__ANDROID_API__="${ANDROID_API}"
+		case "$ARCH" in
+			x86_64|amd64) ANDROID_ARCH=x86_64 ;;
+			*) ANDROID_ARCH=arm64 ;;
+		esac
+
+	    ./Configure android-"${ANDROID_ARCH}" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests \
+			-D__ANDROID_API__="${ANDROID_API}"
 	else
 		./Configure "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests
 	fi
