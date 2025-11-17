@@ -193,7 +193,7 @@ jobs:
           usesh: true
           envs: 'PLATFORM ARCH GITHUB_WORKSPACE'
           prepare: |
-            pkg install curl perl gnu-tar gnu-make gcc-14
+            pkg install curl perl gnu-tar gnu-make gcc-14 gnu-coreutils
 
           run: |
             chmod a+x ./tools/build.sh
