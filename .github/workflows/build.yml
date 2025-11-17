@@ -18,6 +18,7 @@ jobs:
             arch: arm64
             msvc_arch: amd64_arm64
 
+    name: "Windows (${{ matrix.arch }})"
     env:
       ARCH: ${{ matrix.arch }}
 
@@ -59,7 +60,7 @@ jobs:
           path: artifacts/*
 
   msys:
-    name: "MinGW ${{ matrix.arch }}"
+    name: "MinGW (${{ matrix.arch }})"
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -106,10 +107,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
 
     env:
       PLATFORM: android
-      ARCH: arm64
+      ARCH: ${{ matrix.arch }}
 
     steps:
       - uses: actions/checkout@v4
@@ -120,11 +123,11 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: android
+          name: android-${{ matrix.arch }}
           path: artifacts/*
 
   linux:
-    name: "Linux ${{ matrix.arch }}"
+    name: "Linux (${{ matrix.arch }})"
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -153,7 +156,7 @@ jobs:
           path: artifacts/*
 
   unix:
-    name: "${{ matrix.platform }} ${{ matrix.arch }}"
+    name: "${{ matrix.platform }} (${{ matrix.arch }})"
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -180,9 +183,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Disable man-db updates
-        run: sudo rm /var/lib/man-db/auto-update
 
       - name: Build (Solaris)
         if: matrix.platform == 'solaris'
@@ -234,7 +234,7 @@ jobs:
           path: artifacts/*
 
   macos:
-    name: "macOS"
+    name: "macOS (universal)"
     runs-on: macos-latest
     strategy:
       fail-fast: false

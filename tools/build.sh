@@ -14,7 +14,7 @@ android() {
 
 DEFAULT_ARCH=amd64
 if android; then
-	DEFAULT_ARCH=arm64
+	DEFAULT_ARCH=aarch64
 	: "${ANDROID_NDK_ROOT:?-- You must supply the ANDROID_NDK_ROOT environment variable.}"
 	: "${ANDROID_API:=23}"
 	android_paths
@@ -35,7 +35,13 @@ configure() {
 
     # shellcheck disable=SC2086
     if android; then
-	    ./Configure "${BUILD_TYPE}" shared android-"${ARCH}" -U__ANDROID_API__ -D__ANDROID_API__="${ANDROID_API}"
+		case "$ARCH" in
+			x86_64|amd64) ANDROID_ARCH=x86_64 ;;
+			*) ANDROID_ARCH=arm64 ;;
+		esac
+
+	    ./Configure android-"${ANDROID_ARCH}" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests \
+			-D__ANDROID_API__="${ANDROID_API}"
 	else
 		./Configure "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests
 	fi
@@ -120,7 +126,7 @@ if [ "$PLATFORM" = macos ]; then
 	find . -name "*.o" -exec rm {} \;
 
 	TMPDIR="$ROOTDIR"/tmp
-	configure darwin64-x86_64-cc 
+	configure darwin64-x86_64-cc
 	build
 
 	copy_build_artifacts "$TMPDIR"

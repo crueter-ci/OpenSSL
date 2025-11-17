@@ -94,11 +94,7 @@ package() {
     echo "-- Packaging..."
     mkdir -p "$ROOTDIR/artifacts"
 
-	if [ "$PLATFORM" = android ]; then
-		TARBALL=$FILENAME-$PLATFORM-$VERSION.tar
-	else
-		TARBALL=$FILENAME-$PLATFORM-$ARCH-$VERSION.tar
-	fi
+	TARBALL=$FILENAME-$PLATFORM-$ARCH-$VERSION.tar
 
     cd "$OUT_DIR"
     tar cf "$ROOTDIR/artifacts/$TARBALL" ./*
