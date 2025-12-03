@@ -1,70 +1,27 @@
 # OpenSSL CI
 
-Scripts and CI for CMake-compatible OpenSSL 3.5.2 on Windows (amd64, arm64), UNIX (amd64, Solaris, FreeBSD, Linux) and Android (aarch64).
+Scripts and CI for OpenSSL
 
-[**Releases**](https://github.com/crueter/OpenSSL-CI/releases)
+- [**Releases**](https://github.com/crueter-ci/OpenSSL/releases)
+- Shared libraries (`BUILD_SHARED_LIBS=ON`) are supported.
+- CMake targets: `OpenSSL::SSL`, `OpenSSL::Crypto`
 
-## Usage
+## Building and Usage
 
-CMake is recommended. You can include it through `FetchContent`:
+See the [spec](https://github.com/crueter-ci/spec).
 
-```cmake
-if (ANDROID)
-    FetchContent_Declare(
-      OpenSSL
-      DOWNLOAD_EXTRACT_TIMESTAMP true
-      URL https://github.com/crueter/OpenSSL-CI/releases/download/v3.5.2/openssl-android-3.5.2.tar.zst
-    )
-    FetchContent_MakeAvailable(OpenSSL)
-endif()
+These builds of OpenSSL contain a bundled Mozilla certificate store that you must import manually. To do so, e.g. via httplib:
+
+```cpp
+#include <openssl/cert.h>
+#include <httplib.h>
+
+std::unique_ptr<httplib::Client> client = std::make_unique<httplib::Client>(url);
+client->load_ca_cert_store(kCert, sizeof(kCert));
 ```
 
-...or [`CPM`](https://github.com/cpm-cmake/CPM.cmake):
+With raw OpenSSL: see [`eden-emu/eden#8ae797409`](https://git.eden-emu.dev/eden-emu/eden/commit/8ae797409205be4ab8ccc9a87283b77ba01cfb9c)
 
-```cmake
-if (MSVC)
-  CPMAddPackage(
-    NAME OpenSSL
-    URL https://github.com/crueter/OpenSSL-CI/releases/download/v3.5.2/openssl-windows-3.5.2.tar.zst
-  )
-endif()
-```
+## Dependencies
 
-You may additionally specify a `URL_HASH` with sha1, sha256, or sha512. Downloads containing the file's sums are included in each release and can be fetched programmatically.
-
-## Building
-
-### Common
-
-Build scripts are located at `build.sh` in their relevant directory, e.g. `android` and `windows`. All scripts are POSIX-compliant and have the following options as environment variables:
-
-- `SSL_VERSION` (default `3.5.2`): OpenSSL version to build
-- `BUILD_TYPE` (default `no-asm`): OpenSSL build type. Usually you can keep this as-is
-- `BUILD_DIR` (default `<PWD>/build`): The build directory to use
-- `OUT_DIR` (default `<PWD>/out`): The directory to output the include directory and built libraries
-- `ARCH` (default: amd64 on Windows/UNIX, arm64 on Android): The architecture to build for
-
-### Android
-
-Android building is only tested on Linux and macOS. Windows support is not currently planned. Note that while other targets can be built, only arm64 is "officially" supported or distributed.
-
-Environment variables:
-
-- `ANDROID_API` (default `23`): What API to target. Usually you should keep this as-is
-- `ANDROID_NDK_ROOT` (required): The root of your NDK, e.g. `/home/crueter/Android/Sdk/ndk/26.11...`
-
-Android builds both shared and static libraries by default. You can control this with the `BUILD_SHARED_LIBS` CMake variable.
-
-### Windows
-
-Windows building is only tested on MSVC and on Windows only. MSYS2 and MinGW support is planned. Only amd64 is officially supported or distributed for the time being.
-
-Windows builds both shared and static libraries by default. You can control this with the `BUILD_SHARED_LIBS` CMake variable.
-
-### Unix
-
-Unix builds are tested on Linux, FreeBSD, and Solaris (gcc64), and should "just work" out of the box. To change your platform (only affects the artifact name), set the `PLATFORM` environment variable.
-
-Unix builds both shared and static libraries by default. You can control this with the `BUILD_SHARED_LIBS` CMake variable.
-
-Currently, only Linux supports aarch64 builds, though FreeBSD should work in theory.
+All: GNU make, curl, zstd, tar, perl, bash
