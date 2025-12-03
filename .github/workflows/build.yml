@@ -196,6 +196,10 @@ jobs:
             pkg install curl perl gnu-tar gnu-make gcc-14 gnu-coreutils
 
           run: |
+            # wtf
+            ulimit -v unlimited
+            swap -s
+
             chmod a+x ./tools/build.sh
             ./tools/build.sh
 

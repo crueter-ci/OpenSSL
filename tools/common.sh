@@ -71,16 +71,8 @@ sums() {
 
 # nproc
 num_procs() {
-	# default to 4 because github actions
-	if command -v nproc >/dev/null 2>&1; then
-		nproc
-	elif command -v sysctl >/dev/null 2>&1; then
-		sysctl -n hw.logicalcpu
-	elif command -v getconf >/dev/null 2>&1; then
-		getconf _NPROCESSORS_ONLN
-	else
-		echo 4
-	fi
+	nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null \
+		|| getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4
 }
 
 ## Packaging ##
