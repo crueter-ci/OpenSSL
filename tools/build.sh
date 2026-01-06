@@ -41,9 +41,9 @@ configure() {
 		esac
 
 	    ./Configure android-"${ANDROID_ARCH}" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests \
-			-D__ANDROID_API__="${ANDROID_API}"
+			-D__ANDROID_API__="${ANDROID_API}" --prefix=/ --libdir=lib
 	else
-		./Configure "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests
+		./Configure "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests --prefix=/ --libdir=lib
 	fi
 
     echo "-- Making dependencies..."
@@ -85,18 +85,8 @@ copy_build_artifacts() {
 	outdir="$1"
 
     echo "-- Copying artifacts..."
-	mkdir -p "$outdir"/lib
+	$MAKE install_sw DESTDIR="$outdir"
 
-	# make sometimes does not respect SHLIB_VERSION_NUMBER because fuck you
-	mv libssl-*."${SHARED_SUFFIX}" libssl."${SHARED_SUFFIX}"       || true
-	mv libcrypto-*."${SHARED_SUFFIX}" libcrypto."${SHARED_SUFFIX}" || true
-
-	for lib in ssl crypto; do
-        cp lib${lib}*."${SHARED_SUFFIX}" "$outdir"/lib
-        cp lib${lib}*."${STATIC_SUFFIX}" "$outdir"/lib
-    done
-
-    cp -r include "$outdir/"
 	cp "$ROOTDIR"/cert.h "$outdir"/include/openssl
 }
 

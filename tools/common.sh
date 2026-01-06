@@ -7,7 +7,15 @@
 
 ROOTDIR="$PWD"
 : "${OUT_DIR:=$PWD/out}"
-: "${PLATFORM:?-- You must supply the PLATFORM environment variable.}"
+
+case "$(uname -s)" in
+	Linux) : "${PLATFORM:=linux}" ;;
+	Darwin) : "${PLATFORM:=macos}" ;;
+	FreeBSD) : "${PLATFORM:=freebsd}" ;;
+	OpenBSD) : "${PLATFORM:=openbsd}" ;;
+	SunOS) : "${PLATFORM:=solaris}" ;;
+	*) : "${PLATFORM:?-- You must supply the PLATFORM environment variable.}" ;;
+esac
 
 ## Command Checks ##
 
