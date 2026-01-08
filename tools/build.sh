@@ -83,13 +83,11 @@ strip_libs() {
 
 ## Packaging ##
 copy_build_artifacts() {
-	outdir="$1"
-
     echo "-- Copying artifacts..."
-	$MAKE install_dev DESTDIR="$outdir"
+	$MAKE install_dev
 
-    mkdir -p "$outdir"/include
-	cp "$ROOTDIR"/cert.h "$outdir"/include/openssl
+    mkdir -p "$OUT_DIR"/include
+	cp "$ROOTDIR"/cert.h "$OUT_DIR"/include/openssl
 }
 
 ## Cleanup ##
@@ -109,7 +107,7 @@ configure "$CONFIGURE_TARGET"
 build
 
 ## Package ##
-copy_build_artifacts "$OUT_DIR"
+copy_build_artifacts
 
 # macOS extra fun: make x86_64 lib too
 if [ "$PLATFORM" = macos ]; then
@@ -118,15 +116,11 @@ if [ "$PLATFORM" = macos ]; then
 	find . -name "*.o" -exec rm {} \;
 
 	TMPDIR="$ROOTDIR"/tmp
-    mkdir -p "$TMPDIR"
-    oldout="$OUT_DIR"
-    OUT_DIR="$TMPDIR"
+    mv "$OUT_DIR" "$TMPDIR"
 	configure darwin64-x86_64-cc
 	build
 
-	copy_build_artifacts "$TMPDIR"
-
-    OUT_DIR="$oldout"
+	copy_build_artifacts
 
 	# the fun part
 	mkdir -p templibs
