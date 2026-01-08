@@ -41,9 +41,10 @@ configure() {
 		esac
 
 	    ./Configure android-"${ANDROID_ARCH}" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests \
-			-D__ANDROID_API__="${ANDROID_API}" --prefix=/ --libdir=lib
+			-D__ANDROID_API__="${ANDROID_API}" --prefix="$OUT_DIR" --libdir=lib --openssldir="$OUT_DIR"
 	else
-		./Configure "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests --prefix=/ --libdir=lib
+		./Configure "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests \
+			--prefix="$OUT_DIR" --libdir=lib --openssldir="$OUT_DIR"
 	fi
 
     echo "-- Making dependencies..."
@@ -62,7 +63,7 @@ build() {
         TOOLSDIR=$(cygpath -u "$VCToolsInstallDir")
         export PATH="${TOOLSDIR}/bin/Host${VSCMD_ARG_HOST_ARCH}/${VSCMD_ARG_TGT_ARCH}/:$PATH"
 
-		$MAKE build_libs
+		$MAKE build_sw
 	elif [ "$PLATFORM" = macos ]; then
     	$MAKE SHLIB_VERSION_NUMBER=3 build_libs -j"$(num_procs)"
 	else
@@ -85,7 +86,7 @@ copy_build_artifacts() {
 	outdir="$1"
 
     echo "-- Copying artifacts..."
-	$MAKE install_sw DESTDIR="$outdir"
+	$MAKE install_dev install_runtime
 
 	cp "$ROOTDIR"/cert.h "$outdir"/include/openssl
 }

@@ -4,3 +4,4 @@ artifacts
 *.tar.gz
 changelog.md
 cert-cmake
+/strawberry
