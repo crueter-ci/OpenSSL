@@ -86,7 +86,7 @@ copy_build_artifacts() {
 	outdir="$1"
 
     echo "-- Copying artifacts..."
-	$MAKE install_dev install_runtime
+	$MAKE install_dev DESTDIR="$outdir"
 
 	cp "$ROOTDIR"/cert.h "$outdir"/include/openssl
 }
