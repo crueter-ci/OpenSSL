@@ -88,6 +88,7 @@ copy_build_artifacts() {
     echo "-- Copying artifacts..."
 	$MAKE install_dev DESTDIR="$outdir"
 
+    mkdir -p "$outdir"/include
 	cp "$ROOTDIR"/cert.h "$outdir"/include/openssl
 }
 
@@ -117,10 +118,15 @@ if [ "$PLATFORM" = macos ]; then
 	find . -name "*.o" -exec rm {} \;
 
 	TMPDIR="$ROOTDIR"/tmp
+    mkdir -p "$TMPDIR"
+    oldout="$OUT_DIR"
+    OUT_DIR="$TMPDIR"
 	configure darwin64-x86_64-cc
 	build
 
 	copy_build_artifacts "$TMPDIR"
+
+    OUT_DIR="$oldout"
 
 	# the fun part
 	mkdir -p templibs
