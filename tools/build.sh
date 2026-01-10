@@ -55,7 +55,7 @@ build() {
 
 	# ksdjbdfkjsjsdbfjhb
 	if [ "$PLATFORM" = windows ]; then
-	    export CL=" /MP /DEBUG:NONE /Z7"
+	    export CL=" /MP /DEBUG:NONE"
 
 		# microsoft
 		# shellcheck disable=SC2154
@@ -95,6 +95,11 @@ copy_build_artifacts() {
         cp lib${lib}*."${SHARED_SUFFIX}" "$outdir"/lib
         cp lib${lib}*."${STATIC_SUFFIX}" "$outdir"/lib
     done
+
+    # FUCK
+    if [ "$PLATFORM" = windows ]; then
+        find . -name "*.pdb" -exec cp {} "$outdir" \;
+    fi
 
     cp -r include "$outdir/"
 	cp "$ROOTDIR"/cert.h "$outdir"/include/openssl
