@@ -4,7 +4,7 @@
 
 # In some projects you will want to fetch latest from gh/fj api
 VERSION="3.6.0"
-export COMMIT="965d6279e8fe2ffa5d0a06d11077cd9b721813cd"
+export COMMIT="1cb0d36b39f69367d63e940976faaa2c252763b4"
 export PRETTY_NAME="OpenSSL"
 export FILENAME="openssl"
 export REPO="openssl/openssl"
