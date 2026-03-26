@@ -138,6 +138,10 @@ case "$PLATFORM" in
 			export RC=llvm-windres
 		fi
 		;;
+	ios)
+		SHARED_SUFFIX=dylib
+		CONFIGURE_TARGET=ios64-xcrun
+		;;
 esac
 
 must_install "$MAKE" "$TAR"

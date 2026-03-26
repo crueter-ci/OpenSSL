@@ -38,13 +38,6 @@ jobs:
           name: OpenSSL ${{ env.VERSION }}
           tag_name: v${{ env.VERSION }}
           files: |
-            windows-*/*.tar.zst*
-            mingw-*/*.tar.zst*
-            android-*/*.tar.zst*
-            solaris-*/*.tar.zst*
-            freebsd-*/*.tar.zst*
-            openbsd-*/*.tar.zst*
-            linux-*/*.tar.zst*
-            macos-*/*.tar.zst*
+            */*.tar.zst*
 
           make_latest: true

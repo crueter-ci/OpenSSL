@@ -63,8 +63,8 @@ build() {
         export PATH="${TOOLSDIR}/bin/Host${VSCMD_ARG_HOST_ARCH}/${VSCMD_ARG_TGT_ARCH}/:$PATH"
 
 		$MAKE build_libs
-	elif [ "$PLATFORM" = macos ]; then
-    	$MAKE SHLIB_VERSION_NUMBER=3 build_libs -j"$(num_procs)"
+	elif [ "$PLATFORM" = macos ] || [ "$PLATFORM" = ios ]; then
+    	$MAKE SHLIB_VERSION_NUMBER=4 build_libs -j"$(num_procs)"
 	else
     	$MAKE SHLIB_VERSION_NUMBER= build_libs -j"$(num_procs)"
 	fi
