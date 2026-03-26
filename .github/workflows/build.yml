@@ -260,5 +260,5 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-universal
+          name: ${{ matrix.platform }}-${{ matrix.arch }}
           path: artifacts/*
