@@ -141,6 +141,9 @@ case "$PLATFORM" in
 	ios)
 		SHARED_SUFFIX=dylib
 		CONFIGURE_TARGET=ios64-xcrun
+
+		export CFLAGS="-mios-version-min=16.0"
+		export CXXFLAGS="-mios-version-min=16.0"
 		;;
 esac
 
