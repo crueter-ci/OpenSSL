@@ -3,8 +3,8 @@
 ## Common variables ##
 
 # In some projects you will want to fetch latest from gh/fj api
-VERSION="3.6.0"
-export COMMIT="1cb0d36b39f69367d63e940976faaa2c252763b4"
+VERSION="3.6.2"
+export COMMIT="72d5e8dcd2977234e47e840d2173917daa8bb0fa"
 export PRETTY_NAME="OpenSSL"
 export FILENAME="openssl"
 export REPO="openssl/openssl"

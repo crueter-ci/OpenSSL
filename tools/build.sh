@@ -41,9 +41,13 @@ configure() {
 		esac
 
 	    ./Configure android-"${ANDROID_ARCH}" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests \
-			-D__ANDROID_API__="${ANDROID_API}"
+			-D__ANDROID_API__="${ANDROID_API}" \
+			no-docs enable-camellia enable-ec enable-ec2m enable-sm2 enable-srp enable-idea enable-mdc2 enable-rc5 enable-rfc3779 enable-asm \
+			enable-ktls enable-quic enable-fips
 	else
-		./Configure "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests
+		./Configure "$target" "${BUILD_TYPE}" shared no-makedepend --release threads no-tests \
+			no-docs enable-camellia enable-ec enable-ec2m enable-sm2 enable-srp enable-idea enable-mdc2 enable-rc5 enable-rfc3779 enable-asm \
+			enable-ktls enable-quic enable-fips
 	fi
 
     echo "-- Making dependencies..."
