@@ -134,33 +134,6 @@ build
 
 ## Package ##
 copy_build_artifacts "$OUT_DIR"
-
-# macOS extra fun: make x86_64 lib too
-if [ "$PLATFORM" = macos ]; then
-	# cleanup old libs/object files
-	rm libcrypto.* libssl.*
-	find . -name "*.o" -exec rm {} \;
-
-	TMPDIR="$ROOTDIR"/tmp
-	configure darwin64-x86_64-cc
-	build
-
-	copy_build_artifacts "$TMPDIR"
-
-	# the fun part
-	mkdir -p templibs
-	for suffix in a dylib; do
-		for lib in crypto ssl; do
-			libname=lib${lib}.${suffix}
-			lipo "$TMPDIR"/lib/$libname "$OUT_DIR"/lib/$libname \
-				-create -output templibs/$libname
-
-			mv templibs/$libname "$OUT_DIR"/lib/$libname
-		done
-	done
-	rm -rf tmp
-fi
-
 copy_cmake
 
 strip_libs
