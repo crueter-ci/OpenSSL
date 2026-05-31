@@ -1,9 +1,26 @@
 #!/bin/sh -e
 
+# TODO: Timestamp-based builds
+# Fetch/extract a single time, then have other builds consume that artifact.
+
 ## Build variables ##
 
 # shellcheck disable=SC1091
 . ./tools/vars.sh
+
+_group() {
+    if [ -n "$GITHUB_RUN_ID" ]; then
+		echo "##[group]$*"
+	else
+		echo "======= $* ======="
+	fi
+}
+
+_end() {
+	if [ -n "$GITHUB_RUN_ID" ]; then
+		echo "##[endgroup]"
+	fi
+}
 
 ROOTDIR="$PWD"
 : "${OUT_DIR:=$PWD/out}"
@@ -30,23 +47,29 @@ esac
 
 # download
 download() {
+	_group "Downloading"
 	TRIES=0
 	[ -f "$ARTIFACT" ] && return
 
 	while [ "$TRIES" -le 30 ]; do
-		curl -L "$DOWNLOAD_URL" -o "$ARTIFACT" && return
+		if curl -L "$DOWNLOAD_URL" -o "$ARTIFACT"; then
+			_end
+			return
+		fi
+
 		TRIES=$((TRIES + 1))
 		echo "-- Download failed, trying again in 5 seconds..."
 		sleep 0
 	done
 
 	echo "-- Download failed after 30 tries, aborting"
+	_end
 	exit 1
 }
 
 # extract the archive + apply patches
 extract() {
-	echo "-- Extracting $PRETTY_NAME $VERSION"
+	_group "Extracting $PRETTY_NAME $VERSION"
 	rm -fr "$DIRECTORY"
 
 	case "$ARTIFACT" in
@@ -54,6 +77,7 @@ extract() {
 		*.tar.*) $TAR xf "$ROOTDIR/$ARTIFACT" >/dev/null ;;
 		*.7z) 7z x "$ROOTDIR/$ARTIFACT" >/dev/null ;;
 	esac
+	_end
 }
 
 # generate sha1, 256, and 512 sums for a file
@@ -91,7 +115,7 @@ copy_cmake() {
 }
 
 package() {
-    echo "-- Packaging..."
+    _group "Packaging"
     mkdir -p "$ROOTDIR/artifacts"
 
 	TARBALL=$FILENAME-$PLATFORM-$ARCH-$VERSION.tar
@@ -104,6 +128,7 @@ package() {
     rm "$TARBALL"
 
     sums "$TARBALL.zst"
+	_end
 }
 
 ## Platform Stuff ##
@@ -165,4 +190,38 @@ android_paths() {
             break
         fi
     done
+}
+
+## Platform Utility Functions ##
+
+linux() {
+	[ "$PLATFORM" = linux ]
+}
+
+macos() {
+	[ "$PLATFORM" = macos ]
+}
+
+msvc() {
+	[ "$PLATFORM" = windows ]
+}
+
+mingw() {
+	[ "$PLATFORM" = mingw ]
+}
+
+windows() {
+	msvc || mingw
+}
+
+android() {
+	[ "$PLATFORM" = android ]
+}
+
+arm64() {
+	[ "$ARCH" = arm64 ] || [ "$ARCH" = aarch64 ]
+}
+
+amd64() {
+	[ "$ARCH" = amd64 ] || [ "$ARCH" = x86_64 ]
 }

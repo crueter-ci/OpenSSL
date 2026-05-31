@@ -29,11 +29,9 @@ fi
 ## Build Functions ##
 
 configure() {
+	_group "Configuring $PRETTY_NAME"
 	target="$1"
 
-	echo "-- Configuring $PRETTY_NAME..."
-
-    # shellcheck disable=SC2086
     if android; then
 		case "$ARCH" in
 			x86_64|amd64) ANDROID_ARCH=x86_64 ;;
@@ -50,12 +48,15 @@ configure() {
 			enable-quic enable-fips
 	fi
 
-    echo "-- Making dependencies..."
+	_end
+
+    _group "Making dependencies"
     $MAKE depend
+	_end
 }
 
 build() {
-    echo "-- Building $PRETTY_NAME..."
+	_group "Building $PRETTY_NAME"
 
 	# ksdjbdfkjsjsdbfjhb
 	if [ "$PLATFORM" = windows ]; then
@@ -72,26 +73,30 @@ build() {
 	else
     	$MAKE SHLIB_VERSION_NUMBER= build_libs -j"$(num_procs)"
 	fi
+
+	_end
 }
 
 strip_libs() {
-	echo "-- Stripping shared libraries..."
+	_group "Stripping shared libraries"
 
 	case "$PLATFORM" in
 		windows) ;;
 		android) find "$OUT_DIR" -name "*.so" -exec llvm-strip --strip-all {} \; ;;
 		*) find "$OUT_DIR" -name "*.$SHARED_SUFFIX" -exec strip {} \; ;;
 	esac
+
+	_end
 }
 
 ## Packaging ##
 copy_build_artifacts() {
+    _group "Copying artifacts"
 	outdir="$1"
 
-    echo "-- Copying artifacts..."
 	mkdir -p "$outdir"/lib
 
-	# make sometimes does not respect SHLIB_VERSION_NUMBER because fuck you
+	# make sometimes does not respect SHLIB_VERSION_NUMBER
 	mv libssl-*."${SHARED_SUFFIX}" libssl."${SHARED_SUFFIX}"       || true
 	mv libcrypto-*."${SHARED_SUFFIX}" libcrypto."${SHARED_SUFFIX}" || true
 
@@ -100,13 +105,15 @@ copy_build_artifacts() {
         cp lib${lib}*."${STATIC_SUFFIX}" "$outdir"/lib
     done
 
-    # FUCK
+    # idk
     if [ "$PLATFORM" = windows ]; then
         find . -name "*.pdb" -exec cp {} "$outdir" \;
     fi
 
     cp -r include "$outdir/"
 	cp "$ROOTDIR"/cert.h "$outdir"/include/openssl
+
+	_end
 }
 
 ## Cleanup ##
@@ -127,33 +134,6 @@ build
 
 ## Package ##
 copy_build_artifacts "$OUT_DIR"
-
-# macOS extra fun: make x86_64 lib too
-if [ "$PLATFORM" = macos ]; then
-	# cleanup old libs/object files
-	rm libcrypto.* libssl.*
-	find . -name "*.o" -exec rm {} \;
-
-	TMPDIR="$ROOTDIR"/tmp
-	configure darwin64-x86_64-cc
-	build
-
-	copy_build_artifacts "$TMPDIR"
-
-	# the fun part
-	mkdir -p templibs
-	for suffix in a dylib; do
-		for lib in crypto ssl; do
-			libname=lib${lib}.${suffix}
-			lipo "$TMPDIR"/lib/$libname "$OUT_DIR"/lib/$libname \
-				-create -output templibs/$libname
-
-			mv templibs/$libname "$OUT_DIR"/lib/$libname
-		done
-	done
-	rm -rf tmp
-fi
-
 copy_cmake
 
 strip_libs
