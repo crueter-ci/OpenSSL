@@ -3,8 +3,8 @@
 ## Common variables ##
 
 # In some projects you will want to fetch latest from gh/fj api
-VERSION="4.0.0"
-export COMMIT="11b7b6ea3b65a584e1d31408ed1bdb139465cffd"
+VERSION="4.0.1"
+export COMMIT="1e963a8680ec78ad2072792c7a1a71f3c530bd2e"
 # TIMESTAMP="$(date +%s)"
 # export TIMESTAMP
 export PRETTY_NAME="OpenSSL"
