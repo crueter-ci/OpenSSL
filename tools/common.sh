@@ -55,7 +55,6 @@ MAKE="make"
 TAR="tar"
 
 case "$PLATFORM" in
-	linux) ;;
 	macos)
 		SHARED_SUFFIX=dylib
 		CONFIGURE_TARGET=darwin64-arm64-cc

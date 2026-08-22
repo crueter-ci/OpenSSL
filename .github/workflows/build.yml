@@ -54,6 +54,9 @@ jobs:
             'bash'
           ) }}
 
+    env:
+      BASH_SHELL: ${{ matrix.platform == 'mingw' && 'msys2 {0}' || 'bash' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -88,7 +91,7 @@ jobs:
 
       - name: Setup MSVC
         if: matrix.platform == 'windows'
-        uses: TheMrMilchmann/setup-msvc-dev@v4
+        uses: crueter/setup-msvc-dev@master
 
       # Download + extract
       - name: Download
@@ -113,29 +116,39 @@ jobs:
         run: tar xf ${{ env.ARTIFACT}}
 
       - name: Configure
-        shell: bash
+        shell: matrix.platform == 'mingw' && 'msys2 {0}' || 'bash'
         run: ./tools/configure.sh
         env:
           ARCH: ${{ matrix.arch }}
           PLATFORM: ${{ matrix.platform }}
 
       - name: Build (Windows)
-        if: matrix.platform == 'Windows'
+        if: matrix.platform == 'windows'
         run: |
           cd $env:DIRECTORY
           $env:CL = " /MP /DEBUG:NONE"
           nmake
           nmake install DESTDIR=$env:OUT_DIR
 
+      - name: Build (Android)
+        if: matrix.platform == 'android'
+        run: |
+          . tools/common.sh
+          android_paths
+
+          cd $DIRECTORY
+          make -j4
+          make install DESTDIR=$OUT_DIR
+
       - name: Build (UNIX)
-        if: matrix.platform != 'Windows'
+        if: matrix.platform != 'windows' && matrix.platform != 'android'
         run: |
           cd $DIRECTORY
           make -j4
           make install DESTDIR=$OUT_DIR
 
       - name: Package
-        shell: bash
+        shell: matrix.platform == 'mingw' && 'msys2 {0}' || 'bash'
         run: ./tools/package.sh
         env:
           ARCH: ${{ matrix.arch }}
