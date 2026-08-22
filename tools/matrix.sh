@@ -2,36 +2,35 @@
 
 # Generate build matrix
 
-# {runs-on, arch, platform}
 target() {
-	os="$1"
-	arch="$2"
-	platform="$3"
-
-	cat <<EOF
-    {"runs-on": "$os", "arch": "$arch", "platform": "$platform"}
-EOF
+    printf '{"runs-on": "%s", "arch": "%s", "platform": "%s"}' "$1" "$2" "$3"
 }
 
-echo "{"
+first=1
+add() {
+    [ "$first" -eq 1 ] && first=0 || printf ','
+    target "$1" "$2" "$3"
+}
+
+printf '['
 
 # winblows
 for plat in windows mingw; do
-	echo "$(target windows-latest amd64 $plat),"
-	echo "$(target windows-11-arm aarch64 $plat),"
+    add windows-latest amd64 "$plat"
+    add windows-11-arm aarch64 "$plat"
 done
 
 # loonix
-echo "$(target ubuntu-latest amd64 linux),"
-echo "$(target ubuntu-24.04-arm aarch64 linux),"
+add ubuntu-latest amd64 linux
+add ubuntu-24.04-arm aarch64 linux
 
 # android
 for arch in amd64 aarch64; do
-	echo "$(target ubuntu-latest $arch android),"
+    add ubuntu-latest "$arch" android
 done
 
 # apple
-echo "$(target macos-latest aarch64 macos),"
-target macos-latest aarch64 ios
+add macos-latest aarch64 macos
+add macos-latest aarch64 ios
 
-echo "}"
+echo ']'
