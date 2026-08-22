@@ -116,7 +116,7 @@ jobs:
         run: tar xf ${{ env.ARTIFACT}}
 
       - name: Configure
-        shell: matrix.platform == 'mingw' && 'msys2 {0}' || 'bash'
+        shell: ${{ matrix.platform == 'mingw' && 'msys2 {0}' || 'bash' }}
         run: ./tools/configure.sh
         env:
           ARCH: ${{ matrix.arch }}
@@ -148,7 +148,7 @@ jobs:
           make install DESTDIR=$OUT_DIR
 
       - name: Package
-        shell: matrix.platform == 'mingw' && 'msys2 {0}' || 'bash'
+        shell: ${{ matrix.platform == 'mingw' && 'msys2 {0}' || 'bash' }}
         run: ./tools/package.sh
         env:
           ARCH: ${{ matrix.arch }}
