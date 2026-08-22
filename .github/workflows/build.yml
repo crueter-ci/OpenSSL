@@ -38,19 +38,19 @@ jobs:
 
   build:
     needs: [download]
-    name: "${{ matrix.os.platform }} (${{ matrix.os.arch }})"
-    runs-on: ${{ matrix.os.runs-on }}
+    name: "${{ matrix.platform }} (${{ matrix.arch }})"
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ needs.download.outputs.matrix }}
+        include: ${{ fromJson(needs.download.outputs.matrix) }}
 
     defaults:
       run:
         shell: >-
           ${{ case(
-            matrix.os.platform == 'windows', 'pwsh',
-            matrix.os.platform == 'mingw', 'msys2 {0}',
+            matrix.platform == 'windows', 'pwsh',
+            matrix.platform == 'mingw', 'msys2 {0}',
             'bash'
           ) }}
 
@@ -75,11 +75,11 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.11
 
       - name: Setup MSYS2
-        if: matrix.os.platform == 'mingw'
+        if: matrix.platform == 'mingw'
         id: msys2
         uses: msys2/setup-msys2@v2
         with:
-          msystem: ${{ matrix.os.arch == 'amd64' && 'ucrt64' || 'clangarm64' }}
+          msystem: ${{ matrix.arch == 'amd64' && 'ucrt64' || 'clangarm64' }}
           update: true
           install: >-
             git make tar curl
@@ -87,7 +87,7 @@ jobs:
             toolchain:p
 
       - name: Setup MSVC
-        if: matrix.os.platform == 'windows'
+        if: matrix.platform == 'windows'
         uses: TheMrMilchmann/setup-msvc-dev@v4
 
       # Download + extract
@@ -116,11 +116,11 @@ jobs:
         shell: bash
         run: ./tools/configure.sh
         env:
-          ARCH: ${{ matrix.os.arch }}
-          PLATFORM: ${{ matrix.os.platform }}
+          ARCH: ${{ matrix.arch }}
+          PLATFORM: ${{ matrix.platform }}
 
       - name: Build (Windows)
-        if: matrix.os.platform == 'Windows'
+        if: matrix.platform == 'Windows'
         run: |
           cd $env:DIRECTORY
           $env:CL = " /MP /DEBUG:NONE"
@@ -128,7 +128,7 @@ jobs:
           nmake install DESTDIR=$env:OUT_DIR
 
       - name: Build (UNIX)
-        if: matrix.os.platform != 'Windows'
+        if: matrix.platform != 'Windows'
         run: |
           cd $DIRECTORY
           make -j4
@@ -138,19 +138,19 @@ jobs:
         shell: bash
         run: ./tools/package.sh
         env:
-          ARCH: ${{ matrix.os.arch }}
-          PLATFORM: ${{ matrix.os.platform }}
+          ARCH: ${{ matrix.arch }}
+          PLATFORM: ${{ matrix.platform }}
 
       - name: Upload Tarball
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.os.platform }}-${{ matrix.os.arch }}
+          name: ${{ matrix.platform }}-${{ matrix.arch }}
           path: artifacts/*.tar.zst
           archive: false
 
       - name: Upload Sum
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.os.platform }}-${{ matrix.os.arch }}-sha512sum
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-sha512sum
           path: artifacts/*.tar.zst.sha512sum
           archive: false
