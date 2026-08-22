@@ -82,21 +82,11 @@ jobs:
 
       - name: Setup perl
         if: matrix.platform == 'windows'
+        shell: bash
         run: |
-          $out = "strawberry-perl-5.42.2.1-64bit-portable.zip"
-          $repo = "StrawberryPerl/Perl-Dist-Strawberry"
-          $tag = "SP_54221_64bit"
-
-          curl -LO "https://github.com/$repo/releases/download/$tag/$out"
-          mkdir strawberry
-          cd strawberry
-          7z x ..\$out
-
-          # I hate microsoft
-          $PERL_PATH = "$PWD\perl"
-          "PERL_BIN=$PERL_PATH\bin" >> $env:GITHUB_ENV
-          "PERL5LIB=$PERL_PATH\vendor\lib;$PERL_PATH\lib" >> $env:GITHUB_ENV
-          "$PERL_PATH\bin" >> $env:GITHUB_PATH
+          echo "C:/Strawberry/perl/bin" >> $GITHUB_PATH
+          echo "PERL5LIB=C:/Strawberry/perl/vendor/lib;C:/Strawberry/perl/lib" >> $GITHUB_ENV
+          perl --version
 
       - name: Setup MSYS2
         if: matrix.platform == 'mingw'
