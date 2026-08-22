@@ -77,6 +77,24 @@ jobs:
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.11
 
+      - name: Setup perl
+        if: matrix.platform == 'windows'
+        run: |
+          $out = "strawberry-perl-5.40.2.1-64bit-portable.zip"
+          $repo = "StrawberryPerl/Perl-Dist-Strawberry"
+          $tag = "SP_54021_64bit_UCRT"
+
+          curl -LO "https://github.com/$repo/releases/download/$tag/$out"
+          mkdir strawberry
+          cd strawberry
+          7z x ..\$out
+
+          # I hate microsoft
+          $PERL_PATH = "$PWD\perl"
+          "PERL_BIN=$PERL_PATH\bin" >> $env:GITHUB_ENV
+          "PERL5LIB=$PERL_PATH\vendor\lib;$PERL_PATH\lib" >> $env:GITHUB_ENV
+          "$PERL_PATH\bin" >> $env:GITHUB_PATH
+
       - name: Setup MSYS2
         if: matrix.platform == 'mingw'
         id: msys2
@@ -116,7 +134,7 @@ jobs:
         run: tar xf ${{ env.ARTIFACT}}
 
       - name: Configure
-        run: ./tools/configure.sh
+        run: bash ./tools/configure.sh
         env:
           ARCH: ${{ matrix.arch }}
           PLATFORM: ${{ matrix.platform }}
@@ -147,7 +165,7 @@ jobs:
           make install DESTDIR=$OUT_DIR
 
       - name: Package
-        run: ./tools/package.sh
+        run: bash ./tools/package.sh
         env:
           ARCH: ${{ matrix.arch }}
           PLATFORM: ${{ matrix.platform }}
