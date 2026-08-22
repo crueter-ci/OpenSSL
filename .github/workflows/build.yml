@@ -125,8 +125,14 @@ jobs:
       - name: Extract
         run: tar xf ${{ env.ARTIFACT}}
 
-      - name: Configure
-        run: bash ./tools/configure.sh
+      - name: Configure (Windows)
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: ./tools/configure.sh
+
+      - name: Configure (UNIX)
+        if: matrix.platform != 'windows'
+        run: ./tools/configure.sh
 
       - name: Build (Windows)
         if: matrix.platform == 'windows'
@@ -153,8 +159,14 @@ jobs:
           make -j4
           make install DESTDIR=$OUT_DIR
 
-      - name: Package
-        run: bash ./tools/package.sh
+      - name: Package (Windows)
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: ./tools/configure.sh
+
+      - name: Package (UNIX)
+        if: matrix.platform != 'windows'
+        run: ./tools/package.sh
 
       - name: Upload Tarball
         uses: actions/upload-artifact@v7
