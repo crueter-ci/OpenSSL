@@ -22,9 +22,13 @@ _end() {
 	fi
 }
 
-ROOTDIR="$PWD"
-: "${OUT_DIR:=$PWD/out}"
-: "${PLATFORM:?-- You must supply the PLATFORM environment variable.}"
+# default platform
+case "$(uname -s)" in
+Linux) : "${PLATFORM:=linux}" ;;
+Darwin) : "${PLATFORM:=macos}" ;;
+# TODO: detect msys2
+*) : "${PLATFORM:?-- You must supply the PLATFORM environment variable.}" ;;
+esac
 
 ## Command Checks ##
 
@@ -43,50 +47,6 @@ case "$ARTIFACT" in
 	*) echo "-- Unsupported extension ${ARTIFACT##.*}"; exit 1 ;;
 esac
 
-## Utility Functions ##
-
-# extract the archive + apply patches
-extract() {
-	_group "Extracting $PRETTY_NAME $VERSION"
-	rm -fr "$DIRECTORY"
-
-	case "$ARTIFACT" in
-		*.zip) unzip "$ROOTDIR/$ARTIFACT" >/dev/null ;;
-		*.tar.*) $TAR xf "$ROOTDIR/$ARTIFACT" >/dev/null ;;
-		*.7z) 7z x "$ROOTDIR/$ARTIFACT" >/dev/null ;;
-	esac
-	_end
-}
-
-# generate sha1, 256, and 512 sums for a file
-sums() {
-	for file in "$@"; do
-		for algo in 1 256 512; do
-			if ! command -v sha${algo}sum >/dev/null 2>&1; then
-				sha${algo} "$file" | awk '{print $4}' | tr -d "\n" > "$file".sha${algo}sum
-			else
-				sha${algo}sum "$file" | cut -d " " -f1 | tr -d "\n" > "$file".sha${algo}sum
-			fi
-		done
-	done
-}
-
-# nproc
-num_procs() {
-	# default to 4 because github actions
-	if command -v nproc >/dev/null 2>&1; then
-		nproc
-	elif command -v sysctl >/dev/null 2>&1; then
-		sysctl -n hw.logicalcpu
-	elif command -v getconf >/dev/null 2>&1; then
-		getconf _NPROCESSORS_ONLN
-	else
-		echo 4
-	fi
-}
-
-## Packaging ##
-
 ## Platform Stuff ##
 
 SHARED_SUFFIX=so
@@ -96,10 +56,6 @@ TAR="tar"
 
 case "$PLATFORM" in
 	linux) ;;
-	freebsd|openbsd|solaris)
-		MAKE="gmake"
-		TAR="gtar"
-		;;
 	macos)
 		SHARED_SUFFIX=dylib
 		CONFIGURE_TARGET=darwin64-arm64-cc

@@ -8,10 +8,6 @@ set -e
 
 cd "$DIRECTORY"
 
-android() {
-	[ "$PLATFORM" = android ]
-}
-
 if android; then
 	: "${ANDROID_NDK_ROOT:?-- You must supply the ANDROID_NDK_ROOT environment variable.}"
 	: "${ANDROID_API:=23}"
@@ -32,7 +28,7 @@ configure() {
 			no-docs enable-camellia enable-ec enable-ec2m enable-sm2 enable-srp enable-idea enable-mdc2 enable-rc5 enable-rfc3779 enable-asm \
 			enable-quic enable-fips --prefix=/ --libdir=lib no-apps
 	else
-		./Configure no-asm no-shared no-makedepend --release threads no-tests \
+		./Configure "$CONFIGURE_TARGET" no-asm no-shared no-makedepend --release threads no-tests \
 			no-docs enable-camellia enable-ec enable-ec2m enable-sm2 enable-srp enable-idea enable-mdc2 enable-rc5 enable-rfc3779 enable-asm \
 			enable-quic enable-fips --prefix=/ --libdir=lib no-apps
 	fi

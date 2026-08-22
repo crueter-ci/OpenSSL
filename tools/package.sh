@@ -6,6 +6,8 @@ set -e
 
 . tools/common.sh
 
+ROOTDIR="$PWD"
+
 copy_build_artifacts() {
 	_group "Copying build artifacts"
 
@@ -41,7 +43,7 @@ package() {
 
 	TARBALL=$FILENAME-$PLATFORM-$ARCH-$VERSION.tar
 
-    cd "$OUT_DIR"
+    cd out
     tar cf "$ROOTDIR/artifacts/$TARBALL" ./*
 
     cd "$ROOTDIR/artifacts"
