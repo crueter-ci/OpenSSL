@@ -67,7 +67,7 @@ case "$PLATFORM" in
 	mingw)
 		SHARED_SUFFIX=dll
 		# the consequences of your actions
-		if [ "$ARCH" = arm64 ]; then
+		if [ "$ARCH" = aarch64 ]; then
 			CONFIGURE_TARGET=mingwarm64
 			export CC=clang
 			export CXX=clang++
