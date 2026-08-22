@@ -83,9 +83,9 @@ jobs:
       - name: Setup perl
         if: matrix.platform == 'windows'
         run: |
-          $out = "strawberry-perl-5.40.2.1-64bit-portable.zip"
+          $out = "strawberry-perl-5.42.2.1-64bit-portable.zip"
           $repo = "StrawberryPerl/Perl-Dist-Strawberry"
-          $tag = "SP_54021_64bit_UCRT"
+          $tag = "SP_54221_64bit"
 
           curl -LO "https://github.com/$repo/releases/download/$tag/$out"
           mkdir strawberry
