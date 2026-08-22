@@ -3,184 +3,154 @@ name: CI
 on:
   workflow_call:
 
+env:
+  TAG: 4.0.1
+  COMMIT: b64f68a94e61fa2363c598c75444482b48056697
+
 jobs:
-  windows:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runs-on: windows-latest
-            arch: amd64
-            msvc_arch: amd64
-
-          - runs-on: windows-11-arm
-            arch: arm64
-            msvc_arch: amd64_arm64
-
-    name: "Windows (${{ matrix.arch }})"
-    env:
-      ARCH: ${{ matrix.arch }}
-
+  download:
+    runs-on: ubuntu-slim
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Download
+        run: ./tools/download.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v7
         with:
-          arch: ${{ matrix.msvc_arch }}
+          name: source
+          path: ${{ env.ARTIFACT }}
+          archive: false
 
-      - name: Install wget
-        run: choco install wget
-
-      - name: Setup perl
-        shell: bash
-        run: |
-          wget https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_54021_64bit_UCRT/strawberry-perl-5.40.2.1-64bit-portable.zip
-          mkdir strawberry
-          cd strawberry
-          7z x ../strawberry-perl-5.40.2.1-64bit-portable.zip
-
-          #  I hate microsoft
-          PERL_PATH="$PWD/perl"
-          echo "PERL_BIN=$PERL_PATH/bin" >> $GITHUB_ENV
-          echo "PERL5LIB=$PERL_PATH/vendor/lib;$PERL_PATH/lib" >> $GITHUB_ENV
-
-          ls $PERL_PATH/lib
-
-      - name: Build
-        shell: bash
-        run: |
-          export PATH="$PERL_BIN:$PATH"
-          PLATFORM=windows ./tools/build.sh
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload Timestamp
+        uses: actions/upload-artifact@v7
         with:
-          name: windows-${{ matrix.arch }}
-          path: artifacts/*
+          name: timestamp
+          path: TIMESTAMP
+          archive: false
 
-  msys:
-    name: "MinGW (${{ matrix.arch }})"
+      - name: Generate Build Matrix
+        id: matrix
+        run: echo "matrix=$(./tools/matrix.sh)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: [download]
+    name: "${{ matrix.platform }} (${{ matrix.arch }})"
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - runs-on: windows-latest
-            arch: amd64
-            msystem: ucrt64
+        include: ${{ needs.download.outputs.matrix }}
 
-          - runs-on: windows-11-arm
-            arch: arm64
-            msystem: clangarm64
-
-    env:
-      PLATFORM: mingw
-      ARCH: ${{ matrix.arch }}
+    defaults:
+      run:
+        shell: >-
+          ${{ case(
+            matrix.platform == 'windows', 'pwsh',
+            matrix.platform == 'mingw', 'msys2 {0}',
+            'bash'
+          ) }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v7
+
+      # Setup
+      - name: Setup Environment
+        shell: bash
+        run: |
+          . tools/vars.sh
+          {
+            echo "DIRECTORY=$DIRECTORY"
+            echo "ARTIFACT=$ARTIFACT"
+            echo "OUT_DIR=$GITHUB_WORKSPACE/out"
+          } >> "$GITHUB_ENV"
+
+          mkdir -p out
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.11
 
       - name: Setup MSYS2
+        if: matrix.platform == 'mingw'
         id: msys2
         uses: msys2/setup-msys2@v2
         with:
-          msystem: ${{ matrix.msystem }}
+          msystem: ${{ matrix.arch == 'amd64' && 'ucrt64' || 'clangarm64' }}
           update: true
           install: >-
             git make tar curl
           pacboy: >-
             toolchain:p
 
-      - name: Build
-        shell: msys2 {0}
-        run: ./tools/build.sh
+      - name: Setup MSVC
+        if: matrix.platform == 'windows'
+        uses: TheMrMilchmann/setup-msvc-dev@v4
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      # Download + extract
+      - name: Download
+        uses: actions/download-artifact@v8
         with:
-          name: mingw-${{ matrix.arch }}
-          path: artifacts/*
+          name: ${{ env.ARTIFACT }}
 
-  android:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x86_64, aarch64]
-
-    env:
-      PLATFORM: android
-      ARCH: ${{ matrix.arch }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build
-        run: ./tools/build.sh
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Download Timestamp
+        uses: actions/download-artifact@v8
         with:
-          name: android-${{ matrix.arch }}
-          path: artifacts/*
+          name: TIMESTAMP
 
-  linux:
-    name: "Linux (${{ matrix.arch }})"
-    runs-on: ${{ matrix.runs-on }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runs-on: ubuntu-latest
-            arch: amd64
+      - name: Disable Windows Defender
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-MpPreference -DisableRealtimeMonitoring $true
+          Set-MpPreference -DisableBehaviorMonitoring $true
+          Set-MpPreference -DisableArchiveScanning $true
 
-          - runs-on: ubuntu-24.04-arm
-            arch: aarch64
+      - name: Extract
+        run: tar xf ${{ env.ARTIFACT}}
 
-    env:
-      PLATFORM: linux
-      ARCH: ${{ matrix.arch }}
+      - name: Configure
+        shell: bash
+        run: ./tools/configure.sh
+        env:
+          ARCH: ${{ matrix.arch }}
+          PLATFORM: ${{ matrix.platform }}
 
-    steps:
-      - uses: actions/checkout@v4
+      - name: Build (Windows)
+        if: matrix.platform == 'Windows'
+        run: |
+          cd $env:DIRECTORY
+          $env:CL = " /MP /DEBUG:NONE"
+          nmake
+          nmake install DESTDIR=$env:OUT_DIR
 
-      - name: Build
-        run: ./tools/build.sh
+      - name: Build (UNIX)
+        if: matrix.platform != 'Windows'
+        run: |
+          cd $DIRECTORY
+          make -j4
+          make install DESTDIR=$OUT_DIR
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-${{ matrix.arch }}
-          path: artifacts/*
+      - name: Package
+        shell: bash
+        run: ./tools/package.sh
+        env:
+          ARCH: ${{ matrix.arch }}
+          PLATFORM: ${{ matrix.platform }}
 
-  macos:
-    name: "${{ matrix.platform }} (${{ matrix.arch }})"
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: macos
-            arch: universal
-          - platform: ios
-            arch: aarch64
-
-    env:
-      PLATFORM: ${{ matrix.platform }}
-      ARCH: ${{ matrix.arch }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Build
-        run: ./tools/build.sh
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload Tarball
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
-          path: artifacts/*
+          path: artifacts/*.tar.zst
+          archive: false
+
+      - name: Upload Sum
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-sha512sum
+          path: artifacts/*.tar.zst.sha512sum
+          archive: false

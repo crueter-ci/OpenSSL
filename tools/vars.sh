@@ -2,9 +2,9 @@
 
 ## Common variables ##
 
+# TAG/COMMIT must be set.
+
 # In some projects you will want to fetch latest from gh/fj api
-VERSION="4.0.1"
-export COMMIT="1e963a8680ec78ad2072792c7a1a71f3c530bd2e"
 # TIMESTAMP="$(date +%s)"
 # export TIMESTAMP
 export PRETTY_NAME="OpenSSL"
@@ -13,6 +13,8 @@ export REPO="openssl/openssl"
 export DIRECTORY="openssl-$COMMIT"
 export ARTIFACT="$COMMIT.tar.gz"
 export DOWNLOAD_URL="https://github.com/$REPO/archive/$ARTIFACT"
+TIMESTAMP="$(cat TIMESTAMP)"
+export TIMESTAMP
 
 SHORTSHA=$(echo "$COMMIT" | cut -c1-10)
-export VERSION="$VERSION-$SHORTSHA"
+export VERSION="$TAG-$SHORTSHA-$TIMESTAMP"

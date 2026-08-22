@@ -45,28 +45,6 @@ esac
 
 ## Utility Functions ##
 
-# download
-download() {
-	_group "Downloading"
-	TRIES=0
-	[ -f "$ARTIFACT" ] && return
-
-	while [ "$TRIES" -le 30 ]; do
-		if curl -L "$DOWNLOAD_URL" -o "$ARTIFACT"; then
-			_end
-			return
-		fi
-
-		TRIES=$((TRIES + 1))
-		echo "-- Download failed, trying again in 5 seconds..."
-		sleep 0
-	done
-
-	echo "-- Download failed after 30 tries, aborting"
-	_end
-	exit 1
-}
-
 # extract the archive + apply patches
 extract() {
 	_group "Extracting $PRETTY_NAME $VERSION"
@@ -108,28 +86,6 @@ num_procs() {
 }
 
 ## Packaging ##
-copy_cmake() {
-	echo "-- Copying CMake artifacts..."
-
-    cp "$ROOTDIR"/CMakeLists.txt "$OUT_DIR"
-}
-
-package() {
-    _group "Packaging"
-    mkdir -p "$ROOTDIR/artifacts"
-
-	TARBALL=$FILENAME-$PLATFORM-$ARCH-$VERSION.tar
-
-    cd "$OUT_DIR"
-    tar cf "$ROOTDIR/artifacts/$TARBALL" ./*
-
-    cd "$ROOTDIR/artifacts"
-    zstd -10 "$TARBALL"
-    rm "$TARBALL"
-
-    sums "$TARBALL.zst"
-	_end
-}
 
 ## Platform Stuff ##
 
