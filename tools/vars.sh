@@ -13,7 +13,13 @@ export REPO="openssl/openssl"
 export DIRECTORY="openssl-$COMMIT"
 export ARTIFACT="$COMMIT.tar.gz"
 export DOWNLOAD_URL="https://github.com/$REPO/archive/$ARTIFACT"
-TIMESTAMP="$(cat TIMESTAMP)"
+
+if [ -f TIMESTAMP ]; then
+	TIMESTAMP="$(cat TIMESTAMP)"
+else
+	TIMESTAMP=0
+fi
+
 export TIMESTAMP
 
 SHORTSHA=$(echo "$COMMIT" | cut -c1-10)
