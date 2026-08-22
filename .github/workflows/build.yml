@@ -70,6 +70,9 @@ jobs:
             echo "DIRECTORY=$DIRECTORY"
             echo "ARTIFACT=$ARTIFACT"
             echo "OUT_DIR=$GITHUB_WORKSPACE/out"
+
+            echo "ARCH=${{ matrix.arch }}"
+            echo "PLATFORM=${{ matrix.platform }}"
           } >> "$GITHUB_ENV"
 
           mkdir -p out
@@ -135,9 +138,6 @@ jobs:
 
       - name: Configure
         run: bash ./tools/configure.sh
-        env:
-          ARCH: ${{ matrix.arch }}
-          PLATFORM: ${{ matrix.platform }}
 
       - name: Build (Windows)
         if: matrix.platform == 'windows'
@@ -166,9 +166,6 @@ jobs:
 
       - name: Package
         run: bash ./tools/package.sh
-        env:
-          ARCH: ${{ matrix.arch }}
-          PLATFORM: ${{ matrix.platform }}
 
       - name: Upload Tarball
         uses: actions/upload-artifact@v7
