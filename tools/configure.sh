@@ -34,10 +34,6 @@ configure() {
 	fi
 
 	_end
-
-    _group "Making dependencies"
-    $MAKE depend
-	_end
 }
 
 configure

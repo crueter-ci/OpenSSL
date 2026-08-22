@@ -87,7 +87,6 @@ jobs:
           perl-version: "5.42.2"
           distribution: strawberry
 
-
       - name: Setup MSYS2
         if: matrix.platform == 'mingw'
         id: msys2
@@ -134,6 +133,8 @@ jobs:
         run: |
           cd $env:DIRECTORY
           $env:CL = " /MP /DEBUG:NONE"
+
+          nmake depend
           nmake
           nmake install DESTDIR=$env:OUT_DIR
 
@@ -144,6 +145,8 @@ jobs:
           android_paths
 
           cd $DIRECTORY
+
+          make depend
           make -j4
           make install DESTDIR=$OUT_DIR
 

@@ -51,8 +51,6 @@ esac
 
 SHARED_SUFFIX=so
 STATIC_SUFFIX=a
-MAKE="make"
-TAR="tar"
 
 case "$PLATFORM" in
 	macos)
@@ -62,7 +60,6 @@ case "$PLATFORM" in
 	windows)
 		SHARED_SUFFIX=dll
 		STATIC_SUFFIX=lib
-		MAKE=nmake
 		;;
 	mingw)
 		SHARED_SUFFIX=dll
@@ -83,7 +80,7 @@ case "$PLATFORM" in
 		;;
 esac
 
-must_install "$MAKE" "$TAR"
+must_install tar
 
 export SHARED_SUFFIX
 export STATIC_SUFFIX
