@@ -62,21 +62,6 @@ jobs:
         uses: actions/checkout@v7
 
       # Setup
-      - name: Setup Environment
-        shell: bash
-        run: |
-          . tools/vars.sh
-          {
-            echo "DIRECTORY=$DIRECTORY"
-            echo "ARTIFACT=$ARTIFACT"
-            echo "OUT_DIR=$GITHUB_WORKSPACE/out"
-
-            echo "ARCH=${{ matrix.arch }}"
-            echo "PLATFORM=${{ matrix.platform }}"
-          } >> "$GITHUB_ENV"
-
-          mkdir -p out
-
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.11
 
@@ -102,6 +87,21 @@ jobs:
       - name: Setup MSVC
         if: matrix.platform == 'windows'
         uses: crueter/setup-msvc-dev@master
+
+      - name: Setup Environment
+        shell: bash
+        run: |
+          . tools/vars.sh
+          {
+            echo "DIRECTORY=$DIRECTORY"
+            echo "ARTIFACT=$ARTIFACT"
+            echo "OUT_DIR=$GITHUB_WORKSPACE/out"
+
+            echo "ARCH=${{ matrix.arch }}"
+            echo "PLATFORM=${{ matrix.platform }}"
+          } >> "$GITHUB_ENV"
+
+          mkdir -p out
 
       # Download + extract
       - name: Download
@@ -131,29 +131,25 @@ jobs:
       - name: Build (Windows)
         if: matrix.platform == 'windows'
         run: |
-          cd $env:DIRECTORY
           $env:CL = " /MP /DEBUG:NONE"
+
+          cd $env:DIRECTORY
 
           nmake depend
           nmake
           nmake install DESTDIR=$env:OUT_DIR
 
-      - name: Build (Android)
-        if: matrix.platform == 'android'
+      - name: Build (UNIX)
+        if: matrix.platform != 'windows'
         run: |
-          . tools/common.sh
-          android_paths
+          if [ "${{ matrix.platform }}" = "android" ]; then
+            . tools/common.sh
+            android_paths
+          fi
 
           cd $DIRECTORY
 
           make depend
-          make -j4
-          make install DESTDIR=$OUT_DIR
-
-      - name: Build (UNIX)
-        if: matrix.platform != 'windows' && matrix.platform != 'android'
-        run: |
-          cd $DIRECTORY
           make -j4
           make install DESTDIR=$OUT_DIR
 
