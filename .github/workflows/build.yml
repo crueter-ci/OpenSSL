@@ -32,6 +32,13 @@ jobs:
           path: TIMESTAMP
           archive: false
 
+      - name: Upload Version
+        uses: actions/upload-artifact@v7
+        with:
+          name: version
+          path: VERSION
+          archive: false
+
       - name: Generate Build Matrix
         id: matrix
         run: echo "matrix=$(./tools/matrix.sh)" >> "$GITHUB_OUTPUT"

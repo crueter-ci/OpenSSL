@@ -43,5 +43,6 @@ if [ -n "$GITHUB_RUN_ID" ]; then
 fi
 
 date +"%s" > TIMESTAMP
+echo "$VERSION" > VERSION
 
 download
