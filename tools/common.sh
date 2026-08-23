@@ -22,6 +22,14 @@ _end() {
 	fi
 }
 
+# vcvarsall.bat outputs Platform for some asinine reason...
+# windows is case-insensitive, so attempts to set PLATFORM
+# will keep the variable name as Platform
+# so we have to normalize it here. thank you, microslop
+if [ -n "$Platform" ] && [ -z "$PLATFORM" ]; then
+	export PLATFORM="$Platform"
+fi
+
 # default platform
 case "$(uname -s)" in
 Linux) : "${PLATFORM:=linux}" ;;
