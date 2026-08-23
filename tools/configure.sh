@@ -30,7 +30,7 @@ configure() {
 	else
 		./Configure "$CONFIGURE_TARGET" no-asm no-shared no-makedepend --release threads no-tests \
 			no-docs enable-camellia enable-ec enable-ec2m enable-sm2 enable-srp enable-idea enable-mdc2 enable-rc5 enable-rfc3779 enable-asm \
-			enable-quic enable-fips --prefix=/ --libdir=lib no-apps
+			enable-quic enable-fips --prefix="$PWD/../out" --libdir=lib no-apps
 	fi
 
 	_end
