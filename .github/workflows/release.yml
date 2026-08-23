@@ -25,7 +25,7 @@ jobs:
           merge-multiple: true
 
       - name: Get Version
-        run: echo "$VERSION=$(cat VERSION)" >> "$GITHUB_ENV"
+        run: echo "VERSION=$(cat VERSION)" >> "$GITHUB_ENV"
 
       - name: Generate Changelog
         run: |
