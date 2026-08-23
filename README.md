@@ -3,7 +3,7 @@
 Scripts and CI for OpenSSL
 
 - [**Releases**](https://github.com/crueter-ci/OpenSSL/releases)
-- Shared libraries (`BUILD_SHARED_LIBS=ON`) are supported.
+- Shared libraries (`BUILD_SHARED_LIBS=ON`) are NOT supported.
 - CMake targets: `OpenSSL::SSL`, `OpenSSL::Crypto`
 
 macOS target is ARM-only

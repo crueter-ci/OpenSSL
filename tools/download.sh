@@ -4,6 +4,8 @@
 
 set -e
 
+date +"%s" > TIMESTAMP
+
 . tools/common.sh
 
 must_install curl
@@ -42,7 +44,6 @@ if [ -n "$GITHUB_RUN_ID" ]; then
 	echo "ARTIFACT=$ARTIFACT" >> "$GITHUB_ENV"
 fi
 
-date +"%s" > TIMESTAMP
 echo "$VERSION" > VERSION
 
 download
