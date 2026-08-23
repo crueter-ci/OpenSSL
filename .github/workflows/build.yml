@@ -86,7 +86,7 @@ jobs:
 
       - name: Setup MSVC
         if: matrix.platform == 'windows'
-        uses: crueter/setup-msvc-dev@v4
+        uses: crueter/setup-msvc-dev@master
 
       - name: Setup Environment
         shell: bash
