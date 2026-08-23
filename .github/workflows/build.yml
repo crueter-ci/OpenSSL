@@ -79,9 +79,8 @@ jobs:
 
           # I hate microsoft
           $PERL_PATH = "$PWD\perl"
-          "PERL_BIN=$PERL_PATH\bin" >> $env:GITHUB_ENV
-          "PERL5LIB=$PERL_PATH\vendor\lib;$PERL_PATH\lib" >> $env:GITHUB_ENV
           "$PERL_PATH\bin" >> $env:GITHUB_PATH
+          "$PERL_PATH\site\bin" >> $env:GITHUB_PATH
 
       - name: Setup MSYS2
         if: matrix.platform == 'mingw'
