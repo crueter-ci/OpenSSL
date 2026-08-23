@@ -77,11 +77,6 @@ jobs:
           cd strawberry
           7z x ..\$out
 
-          # I hate microsoft
-          $PERL_PATH = "$PWD\perl"
-          "$PERL_PATH\bin" >> $env:GITHUB_PATH
-          "$PERL_PATH\site\bin" >> $env:GITHUB_PATH
-
       - name: Setup MSYS2
         if: matrix.platform == 'mingw'
         id: msys2
@@ -138,7 +133,9 @@ jobs:
       - name: Configure (Windows)
         if: matrix.platform == 'windows'
         shell: bash
-        run: ./tools/configure.sh
+        run: |
+          export PATH="$GITHUB_WORKSPACE/strawberry/perl/bin:$PATH"
+          ./tools/configure.sh
 
       - name: Configure (UNIX)
         if: matrix.platform != 'windows'
