@@ -150,7 +150,7 @@ jobs:
 
           nmake depend
           nmake
-          nmake install DESTDIR=$env:OUT_DIR
+          nmake install DESTDIR=""
 
       - name: Build (UNIX)
         if: matrix.platform != 'windows'
@@ -164,7 +164,7 @@ jobs:
 
           make depend
           make -j4
-          make install DESTDIR=$OUT_DIR
+          make install DESTDIR=""
 
       - name: Package (Windows)
         if: matrix.platform == 'windows'
