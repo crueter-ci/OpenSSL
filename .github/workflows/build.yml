@@ -158,7 +158,7 @@ jobs:
 
       - name: Build
         run: ${{ env.MAKE }} -j8
-        directory: ${{ env.DIRECTORY}}
+        working-directory: ${{ env.DIRECTORY}}
 
       - name: Package (Windows)
         run: bash ./tools/package.sh
