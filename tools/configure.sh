@@ -14,6 +14,10 @@ if android; then
 	android_paths
 fi
 
+if msvc && [ -n "$GITHUB_WORKSPACE" ]; then
+	export PATH="$GITHUB_WORKSPACE/strawberry/perl/bin:$PATH"
+fi
+
 configure() {
 	_group "Configuring $PRETTY_NAME"
 
@@ -31,11 +35,28 @@ configure() {
 			enable-quic enable-fips --prefix="$PWD/../out" --libdir=lib no-apps
 
 		# bruh
-		sed -i "s|CROSS_COMPILE=|CROSS_COMPILE=${CROSS_PREFIX}\/|" Makefile
+		sed -i'' "s|CROSS_COMPILE=|CROSS_COMPILE=${CROSS_PREFIX}\/|" Makefile
 
 		# shellcheck disable=SC2016
-		sed -i 's/RANLIB=$(CROSS_COMPILE):/RANLIB=$(CROSS_COMPILE)llvm-ranlib/' Makefile
+		sed -i'' 's/RANLIB=$(CROSS_COMPILE):/RANLIB=$(CROSS_COMPILE)llvm-ranlib/' Makefile
 	else
+		# special stuff
+		case "$PLATFORM" in
+			ios)
+				CONFIGURE_TARGET=ios64-xcrun
+
+				export CFLAGS="-mios-version-min=16.0"
+				export CXXFLAGS="-mios-version-min=16.0"
+				;;
+			mingw)
+				if arm64; then
+					CONFIGURE_TARGET=mingwarm64
+					export CC=clang
+					export CXX=clang++
+					export RC=llvm-windres
+				fi
+				;;
+		esac
 		./Configure "$CONFIGURE_TARGET" no-asm no-shared no-makedepend --release threads no-tests \
 			no-docs enable-camellia enable-ec enable-ec2m enable-sm2 enable-srp enable-idea enable-mdc2 enable-rc5 enable-rfc3779 enable-asm \
 			enable-quic enable-fips --prefix="$PWD/../out" --libdir=lib no-apps
@@ -47,8 +68,8 @@ configure() {
 			SCCACHE_PATH="$(cygpath -u "$SCCACHE_PATH")"
 		fi
 
-		sed -i "s|^CC=|CC=${SCCACHE_PATH} |" Makefile
-		sed -i "s|^CXX=|CXX=${SCCACHE_PATH} |" Makefile
+		sed -i'' "s|^CC=|CC=${SCCACHE_PATH} |" Makefile
+		sed -i'' "s|^CXX=|CXX=${SCCACHE_PATH} |" Makefile
 	fi
 
 	_end
