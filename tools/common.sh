@@ -1,15 +1,14 @@
 #!/bin/sh -e
 
-# TODO: Timestamp-based builds
-# Fetch/extract a single time, then have other builds consume that artifact.
-
 ## Build variables ##
 
 # shellcheck disable=SC1091
 . ./tools/vars.sh
 
+export ROOTDIR="$PWD"
+
 _group() {
-    if [ -n "$GITHUB_RUN_ID" ]; then
+	if [ -n "$GITHUB_RUN_ID" ]; then
 		echo "##[group]$*"
 	else
 		echo "======= $* ======="
@@ -34,7 +33,14 @@ fi
 case "$(uname -s)" in
 Linux) : "${PLATFORM:=linux}" ;;
 Darwin) : "${PLATFORM:=macos}" ;;
-# TODO: detect msys2
+CYGWIN* | MINGW* | MSYS*)
+	# awesome microsoft moment
+	if [ -n "$MYSTEM" ]; then
+		: "${PLATFORM:=mingw}"
+	else
+		: "${PLATFORM:=windows}"
+	fi
+	;;
 *) : "${PLATFORM:?-- You must supply the PLATFORM environment variable.}" ;;
 esac
 
@@ -46,67 +52,6 @@ must_install() {
 	done
 }
 
-must_install curl zstd
-
-case "$ARTIFACT" in
-	*.zip) must_install unzip ;;
-	*.tar.*) ;;
-	*.7z) must_install 7z ;;
-	*) echo "-- Unsupported extension ${ARTIFACT##.*}"; exit 1 ;;
-esac
-
-## Platform Stuff ##
-
-SHARED_SUFFIX=so
-STATIC_SUFFIX=a
-
-case "$PLATFORM" in
-	macos)
-		SHARED_SUFFIX=dylib
-		CONFIGURE_TARGET=darwin64-arm64-cc
-		;;
-	windows)
-		SHARED_SUFFIX=dll
-		STATIC_SUFFIX=lib
-		;;
-	mingw)
-		SHARED_SUFFIX=dll
-		# the consequences of your actions
-		if [ "$ARCH" = aarch64 ]; then
-			CONFIGURE_TARGET=mingwarm64
-			export CC=clang
-			export CXX=clang++
-			export RC=llvm-windres
-		fi
-		;;
-	ios)
-		SHARED_SUFFIX=dylib
-		CONFIGURE_TARGET=ios64-xcrun
-
-		export CFLAGS="-mios-version-min=16.0"
-		export CXXFLAGS="-mios-version-min=16.0"
-		;;
-esac
-
-must_install tar
-
-export SHARED_SUFFIX
-export STATIC_SUFFIX
-export MAKE
-export TAR
-export CONFIGURE_TARGET
-
-android_paths() {
-	export ANDROID_NDK_HOME="$ANDROID_NDK_ROOT"
-
-    for host in linux-x86_64 linux-x86 darwin-x86_64 darwin-x86 windows-x86_64; do
-        if [ -d "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/$host/bin" ]; then
-            ANDROID_TOOLCHAIN="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/$host/bin"
-            export PATH="$ANDROID_TOOLCHAIN:$PATH"
-            break
-        fi
-    done
-}
 
 ## Platform Utility Functions ##
 
@@ -116,6 +61,10 @@ linux() {
 
 macos() {
 	[ "$PLATFORM" = macos ]
+}
+
+ios() {
+	[ "$PLATFORM" = ios ]
 }
 
 msvc() {
@@ -140,4 +89,96 @@ arm64() {
 
 amd64() {
 	[ "$ARCH" = amd64 ] || [ "$ARCH" = x86_64 ]
+}
+
+###############
+# Other utils #
+###############
+
+# download, store version/artifact names
+download() {
+	_group "Downloading $PRETTY_NAME $VERSION"
+
+	must_install curl
+
+	if [ -n "$GITHUB_RUN_ID" ]; then
+		echo "ARTIFACT=$ARTIFACT" >> "$GITHUB_ENV"
+	fi
+
+	echo "$VERSION" > VERSION
+
+	echo "-- URL: $DOWNLOAD_URL"
+
+	TRIES=0
+	if [ -f "$ARTIFACT" ]; then
+		echo "-- Already downloaded, skipping"
+		_end
+		return
+	fi
+
+	while [ "$TRIES" -le 30 ]; do
+		if curl -L "$DOWNLOAD_URL" -o "$ARTIFACT"; then
+			echo "-- Succeeded"
+			_end
+			return
+		fi
+
+		TRIES=$((TRIES + 1))
+		echo "-- Download failed, trying again in 5 seconds..."
+		sleep 5
+	done
+
+	echo "-- Download failed after 30 tries, aborting"
+	_end
+	exit 1
+}
+
+# Copy CMakeLists.txt (if applicable)
+copy_cmake() {
+	_group "Copying CMake artifacts"
+
+    cp "$ROOTDIR"/CMakeLists.txt out
+
+	_end
+}
+
+# Get a sha512 sum
+sums() {
+	for file in "$@"; do
+		must_install sha512sum
+		sha512sum "$file" | cut -d " " -f1 | tr -d "\n" >"$file".sha512sum
+	done
+}
+
+# package
+package() {
+    _group "Packaging"
+    mkdir -p "$ROOTDIR/artifacts"
+
+	TARBALL=$FILENAME-$PLATFORM-$ARCH-$VERSION.tar
+
+    cd out
+    tar cf "$ROOTDIR/artifacts/$TARBALL" ./*
+
+    cd "$ROOTDIR/artifacts"
+    zstd -10 "$TARBALL"
+    rm "$TARBALL"
+
+    sums "$TARBALL.zst"
+	_end
+}
+
+# setup android paths/cross prefix
+android_paths() {
+	export ANDROID_NDK_HOME="$ANDROID_NDK_ROOT"
+
+	# TODO: add other plats
+	for host in linux-x86_64 linux-x86 darwin-x86_64 darwin-x86 windows-x86_64; do
+		if [ -d "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/$host/bin" ]; then
+			ANDROID_TOOLCHAIN="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/$host/bin"
+			export CROSS_PREFIX="$ANDROID_TOOLCHAIN"
+			export PATH="$ANDROID_TOOLCHAIN:$PATH"
+			break
+		fi
+	done
 }
