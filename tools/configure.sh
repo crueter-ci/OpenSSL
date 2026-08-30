@@ -77,7 +77,7 @@ configure() {
 	# ccache
 	if [ -n "$SCCACHE_PATH" ]; then
 		if windows; then
-			SCCACHE_PATH="$(cygpath -u "$SCCACHE_PATH")"
+			SCCACHE_PATH="$(cygpath -m "$SCCACHE_PATH")"
 		fi
 
 		sed -i'' -e "s|^CC=|CC=${SCCACHE_PATH} |" Makefile
