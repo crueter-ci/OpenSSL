@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  VERSION: unset
+
 jobs:
   build:
     name: Build
@@ -15,7 +18,7 @@ jobs:
 
   release:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v7
 
@@ -27,14 +30,9 @@ jobs:
       - name: Get Version
         run: echo "VERSION=$(cat VERSION)" >> "$GITHUB_ENV"
 
-      - name: Generate Changelog
-        run: |
-          ./tools/changelog.sh > changelog.md
-
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
-          body_path: ./changelog.md
           name: OpenSSL ${{ env.VERSION }}
           tag_name: ${{ env.VERSION }}
           files: |

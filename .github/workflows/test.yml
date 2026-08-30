@@ -12,7 +12,7 @@ jobs:
 
   release:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v7
 
@@ -22,18 +22,7 @@ jobs:
           merge-multiple: true
 
       - name: Get Version
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
-
-      - name: Generate Changelog
-        run: |
-          ./tools/changelog.sh > changelog.md
-
-      - name: Test
-        run: |
-          echo "Version: $VERSION"
-          echo
-          cat changelog.md
+        run: cat VERSION
 
       - name: Check artifacts
-        run:
-          find -name "*.tar.zst*"
+        run: find -name "*.tar.zst*"

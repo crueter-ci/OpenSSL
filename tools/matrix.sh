@@ -3,13 +3,13 @@
 # Generate build matrix
 
 target() {
-    printf '{"runs-on": "%s", "arch": "%s", "platform": "%s"}' "$1" "$2" "$3"
+    printf '{"runs-on": "%s", "arch": "%s", "platform": "%s", "container": "%s"}' "$1" "$2" "$3" "$4"
 }
 
 first=1
 add() {
     [ "$first" -eq 1 ] && first=0 || printf ','
-    target "$1" "$2" "$3"
+    target "$1" "$2" "$3" "$4"
 }
 
 printf '['

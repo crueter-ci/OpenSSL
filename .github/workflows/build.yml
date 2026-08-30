@@ -4,8 +4,9 @@ on:
   workflow_call:
 
 env:
-  TAG: 4.0.1
-  COMMIT: b64f68a94e61fa2363c598c75444482b48056697
+  ARTIFACT: unset
+  DIRECTORY: unset
+  SCCACHE_GHA_ENABLED: "true"
 
 jobs:
   download:
@@ -41,7 +42,9 @@ jobs:
 
       - name: Generate Build Matrix
         id: matrix
-        run: echo "matrix=$(./tools/matrix.sh)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "matrix=$(./tools/matrix.sh)" >> "$GITHUB_OUTPUT"
+          tools/matrix.sh
 
   build:
     needs: [download]
@@ -51,6 +54,8 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.download.outputs.matrix) }}
+
+    container: ${{ matrix.container }}
 
     defaults:
       run:
@@ -63,14 +68,16 @@ jobs:
 
     env:
       BASH_SHELL: ${{ matrix.platform == 'mingw' && 'msys2 {0}' || 'bash' }}
+      # change this if you need jom, ninja, cmake etc
+      MAKE: ${{ matrix.platform == 'windows' && 'jom' || 'make' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
       # Setup
-      # - name: Setup sccache
-      #   uses: mozilla-actions/sccache-action@v0.0.11
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.11
 
       - name: Setup perl
         if: matrix.platform == 'windows'
@@ -95,6 +102,14 @@ jobs:
             git make tar curl
           pacboy: >-
             toolchain:p
+
+      - name: Install dependencies (MSVC)
+        uses: crueter-ci/install-tools@master
+        if: matrix.platform == 'windows'
+        with:
+          pkgconf: true
+          zstd: true
+          jom: true
 
       - name: Setup MSVC
         if: matrix.platform == 'windows'
@@ -137,50 +152,16 @@ jobs:
       - name: Extract
         run: tar xf ${{ env.ARTIFACT}}
 
-      - name: Configure (Windows)
-        if: matrix.platform == 'windows'
-        shell: bash
-        run: |
-          export PATH="$GITHUB_WORKSPACE/strawberry/perl/bin:$PATH"
-          ./tools/configure.sh
+      # configure
+      - name: Configure
+        run: bash ./tools/configure.sh
 
-      - name: Configure (UNIX)
-        if: matrix.platform != 'windows'
-        run: ./tools/configure.sh
-
-      - name: Build (Windows)
-        if: matrix.platform == 'windows'
-        run: |
-          $env:CL = " /MP /DEBUG:NONE"
-
-          cd $env:DIRECTORY
-
-          nmake depend
-          nmake
-          nmake install DESTDIR=""
-
-      - name: Build (UNIX)
-        if: matrix.platform != 'windows'
-        run: |
-          if [ "${{ matrix.platform }}" = "android" ]; then
-            . tools/common.sh
-            android_paths
-          fi
-
-          cd $DIRECTORY
-
-          make depend
-          make -j4
-          make install DESTDIR=""
+      - name: Build
+        run: ${{ env.MAKE }} -j8
+        working-directory: ${{ env.DIRECTORY}}
 
       - name: Package (Windows)
-        if: matrix.platform == 'windows'
-        shell: bash
-        run: ./tools/package.sh
-
-      - name: Package (UNIX)
-        if: matrix.platform != 'windows'
-        run: ./tools/package.sh
+        run: bash ./tools/package.sh
 
       - name: Upload Tarball
         uses: actions/upload-artifact@v7

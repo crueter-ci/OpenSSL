@@ -2,11 +2,11 @@
 
 ## Common variables ##
 
-# TAG/COMMIT must be set.
-
 # In some projects you will want to fetch latest from gh/fj api
-# TIMESTAMP="$(date +%s)"
-# export TIMESTAMP
+
+export TAG=4.0.1
+export COMMIT=b64f68a94e61fa2363c598c75444482b48056697
+
 export PRETTY_NAME="OpenSSL"
 export FILENAME="openssl"
 export REPO="openssl/openssl"
@@ -17,7 +17,8 @@ export DOWNLOAD_URL="https://github.com/$REPO/archive/$ARTIFACT"
 if [ -f TIMESTAMP ]; then
 	TIMESTAMP="$(cat TIMESTAMP)"
 else
-	TIMESTAMP=0
+	TIMESTAMP=$(date +"%s")
+	echo "$TIMESTAMP" > TIMESTAMP
 fi
 
 export TIMESTAMP
