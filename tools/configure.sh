@@ -35,10 +35,10 @@ configure() {
 			enable-quic enable-fips --prefix="$PWD/../out" --libdir=lib no-apps
 
 		# bruh
-		sed -i'' "s|CROSS_COMPILE=|CROSS_COMPILE=${CROSS_PREFIX}\/|" Makefile
+		sed -i'' -e "s|CROSS_COMPILE=|CROSS_COMPILE=${CROSS_PREFIX}\/|" Makefile
 
 		# shellcheck disable=SC2016
-		sed -i'' 's/RANLIB=$(CROSS_COMPILE):/RANLIB=$(CROSS_COMPILE)llvm-ranlib/' Makefile
+		sed -i'' -e 's/RANLIB=$(CROSS_COMPILE):/RANLIB=$(CROSS_COMPILE)llvm-ranlib/' Makefile
 	else
 		# special stuff
 		case "$PLATFORM" in
@@ -68,8 +68,8 @@ configure() {
 			SCCACHE_PATH="$(cygpath -u "$SCCACHE_PATH")"
 		fi
 
-		sed -i '' "s|^CC=|CC=${SCCACHE_PATH} |" Makefile
-		sed -i '' "s|^CXX=|CXX=${SCCACHE_PATH} |" Makefile
+		sed -i'' -e "s|^CC=|CC=${SCCACHE_PATH} |" Makefile
+		sed -i'' -e "s|^CXX=|CXX=${SCCACHE_PATH} |" Makefile
 
 	fi
 

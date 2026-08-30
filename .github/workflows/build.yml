@@ -4,10 +4,9 @@ on:
   workflow_call:
 
 env:
-  TAG: 4.0.1
-  COMMIT: b64f68a94e61fa2363c598c75444482b48056697
   ARTIFACT: unset
   DIRECTORY: unset
+  SCCACHE_GHA_ENABLED: "true"
 
 jobs:
   download:
@@ -69,6 +68,8 @@ jobs:
 
     env:
       BASH_SHELL: ${{ matrix.platform == 'mingw' && 'msys2 {0}' || 'bash' }}
+      # change this if you need jom, ninja, cmake etc
+      MAKE: ${{ matrix.platform == 'windows' && 'jom' || 'make' }}
 
     steps:
       - name: Checkout
@@ -108,7 +109,7 @@ jobs:
         with:
           pkgconf: true
           zstd: true
-          make: true
+          jom: true
 
       - name: Setup MSVC
         if: matrix.platform == 'windows'
@@ -156,7 +157,8 @@ jobs:
         run: bash ./tools/configure.sh
 
       - name: Build
-        run: make -C ${{ env.DIRECTORY }} -j8
+        run: ${{ env.MAKE }} -j8
+        directory: ${{ env.DIRECTORY}}
 
       - name: Package (Windows)
         run: bash ./tools/package.sh
