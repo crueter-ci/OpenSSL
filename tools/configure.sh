@@ -68,8 +68,9 @@ configure() {
 			SCCACHE_PATH="$(cygpath -u "$SCCACHE_PATH")"
 		fi
 
-		sed -i'' "s|^CC=|CC=${SCCACHE_PATH} |" Makefile
-		sed -i'' "s|^CXX=|CXX=${SCCACHE_PATH} |" Makefile
+		sed -i '' "s|^CC=|CC=${SCCACHE_PATH} |" Makefile
+		sed -i '' "s|^CXX=|CXX=${SCCACHE_PATH} |" Makefile
+
 	fi
 
 	_end
