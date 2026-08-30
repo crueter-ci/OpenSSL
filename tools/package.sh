@@ -11,7 +11,10 @@ ROOTDIR="$PWD"
 copy_build_artifacts() {
 	_group "Copying build artifacts"
 
-	"${MAKE:-make}" install -C "$DIRECTORY"
+	cd "$DIRECTORY"
+	"${MAKE:-make}" install
+	cd ..
+
 	rm -rf out/lib/cmake out/lib/ossl-modules out/lib/pkgconfig out/ssl out/bin
 	cp cert.h out/include/openssl
 
