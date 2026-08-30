@@ -42,11 +42,23 @@ configure() {
 	else
 		# special stuff
 		case "$PLATFORM" in
+			macos)
+				export CFLAGS="-mmacosx-version-min=15.0"
+				export CXXFLAGS="-mmacosx-version-min=15.0"
+				;;
 			ios)
 				CONFIGURE_TARGET=ios64-xcrun
 
 				export CFLAGS="-mios-version-min=16.0"
 				export CXXFLAGS="-mios-version-min=16.0"
+
+				# TODO: this should be a common func :()
+				sysroot="$(xcrun --sdk "$IOS_TARGET" --show-sdk-path)"
+				CC="$(xcrun --sdk "$IOS_TARGET" --find clang) -isysroot ${sysroot}"
+				CXX="$(xcrun --sdk "$IOS_TARGET" --find clang++) -isysroot ${sysroot}"
+
+				export CC CXX
+
 				;;
 			mingw)
 				if arm64; then
