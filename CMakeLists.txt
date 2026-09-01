@@ -8,8 +8,8 @@ set(OPENSSL_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
 set(LIB_TYPE STATIC)
 set(LIB_SUFFIX a)
 
-add_library(crypto ${LIB_TYPE} IMPORTED)
-add_library(ssl ${LIB_TYPE} IMPORTED)
+add_library(crypto ${LIB_TYPE} IMPORTED GLOBAL)
+add_library(ssl ${LIB_TYPE} IMPORTED GLOBAL)
 
 add_library(OpenSSL::Crypto ALIAS crypto)
 add_library(OpenSSL::SSL ALIAS ssl)
