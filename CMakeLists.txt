@@ -6,7 +6,11 @@ set(OPENSSL_LIB_DIR ${CMAKE_CURRENT_LIST_DIR}/lib)
 set(OPENSSL_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
 
 set(LIB_TYPE STATIC)
-set(LIB_SUFFIX a)
+if (MSVC)
+    set(LIB_SUFFIX lib)
+else()
+    set(LIB_SUFFIX a)
+endif()
 
 add_library(crypto ${LIB_TYPE} IMPORTED GLOBAL)
 add_library(ssl ${LIB_TYPE} IMPORTED GLOBAL)
@@ -19,19 +23,11 @@ set_target_properties(crypto PROPERTIES
 set_target_properties(ssl PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR})
 
-if (UNIX OR MINGW)
-    set_target_properties(crypto PROPERTIES
-        IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libcrypto.${LIB_SUFFIX})
+set_target_properties(crypto PROPERTIES
+    IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libcrypto.${LIB_SUFFIX})
 
-    set_target_properties(ssl PROPERTIES
-        IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libssl.${LIB_SUFFIX})
-else()
-    set_target_properties(crypto PROPERTIES
-        IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libcrypto_static.lib)
-
-    set_target_properties(ssl PROPERTIES
-        IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libssl_static.lib)
-endif()
+set_target_properties(ssl PROPERTIES
+    IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libssl.${LIB_SUFFIX})
 
 if (WIN32)
     # extras needed, notably for static linking
