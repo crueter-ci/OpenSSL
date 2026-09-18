@@ -12,25 +12,19 @@ else()
     set(LIB_SUFFIX a)
 endif()
 
-add_library(crypto ${LIB_TYPE} IMPORTED GLOBAL)
-add_library(ssl ${LIB_TYPE} IMPORTED GLOBAL)
+add_library(OpenSSL::Crypto ${LIB_TYPE} IMPORTED GLOBAL)
+add_library(OpenSSL::SSL ${LIB_TYPE} IMPORTED GLOBAL)
 
-add_library(OpenSSL::Crypto ALIAS crypto)
-add_library(OpenSSL::SSL ALIAS ssl)
-
-set_target_properties(crypto PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR})
-set_target_properties(ssl PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR})
-
-set_target_properties(crypto PROPERTIES
+set_target_properties(OpenSSL::Crypto PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR}
     IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libcrypto.${LIB_SUFFIX})
 
-set_target_properties(ssl PROPERTIES
+set_target_properties(OpenSSL::SSL PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR}
     IMPORTED_LOCATION ${OPENSSL_LIB_DIR}/libssl.${LIB_SUFFIX})
 
 if (WIN32)
     # extras needed, notably for static linking
-    target_link_libraries(ssl INTERFACE
+    target_link_libraries(OpenSSL::SSL INTERFACE
         wsock32 ws2_32 crypt32 mswsock wlanapi)
 endif()
